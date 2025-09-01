@@ -11,6 +11,10 @@ on:
       - 'package-lock.json'
       - '.github/workflows/cloudflare-deploy.yml'
 
+permissions:
+  contents: read
+  deployments: write
+
 env:
   NODE_VERSION: '20'
 
@@ -45,7 +49,6 @@ jobs:
           accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
           projectName: cloudflare-static-deployer
           directory: frontend/dist
-          gitHubToken: ${{ secrets.GITHUB_TOKEN }}
           wranglerVersion: '3'
 
   deploy-workers:
