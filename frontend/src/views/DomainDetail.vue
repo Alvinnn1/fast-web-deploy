@@ -31,123 +31,116 @@
     </div>
 
     <!-- Domain Detail Content -->
-    <div v-else-if="domainDetail" class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-      <!-- Main Content -->
-      <div class="lg:col-span-2 space-y-6">
-        <!-- Domain Info Card -->
-        <Card title="域名信息">
-          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
-              <label class="text-sm font-medium text-gray-500">域名状态</label>
-              <div class="mt-1">
-                <span :class="statusClasses"
-                  class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium">
-                  <span :class="statusDotClasses" class="w-1.5 h-1.5 rounded-full mr-1.5"></span>
-                  {{ statusText }}
-                </span>
-              </div>
-            </div>
-            <div>
-              <label class="text-sm font-medium text-gray-500">创建时间</label>
-              <p class="mt-1 text-sm text-gray-900">{{ formatDate(domainDetail.createdAt) }}</p>
-            </div>
-            <div>
-              <label class="text-sm font-medium text-gray-500">最后修改</label>
-              <p class="mt-1 text-sm text-gray-900">{{ formatDate(domainDetail.modifiedAt) }}</p>
-            </div>
-            <div>
-              <label class="text-sm font-medium text-gray-500">DNS记录数量</label>
-              <p class="mt-1 text-sm text-gray-900">{{ recordsCount }} 条记录</p>
+    <div v-else-if="domainDetail" class="space-y-6">
+      <!-- Domain Info Card -->
+      <Card title="域名信息">
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div>
+            <label class="text-sm font-medium text-gray-500">域名状态</label>
+            <div class="mt-1">
+              <span :class="statusClasses"
+                class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium">
+                <span :class="statusDotClasses" class="w-1.5 h-1.5 rounded-full mr-1.5"></span>
+                {{ statusText }}
+              </span>
             </div>
           </div>
-        </Card>
+          <div>
+            <label class="text-sm font-medium text-gray-500">创建时间</label>
+            <p class="mt-1 text-sm text-gray-900">{{ formatDate(domainDetail.createdAt) }}</p>
+          </div>
+          <div>
+            <label class="text-sm font-medium text-gray-500">最后修改</label>
+            <p class="mt-1 text-sm text-gray-900">{{ formatDate(domainDetail.modifiedAt) }}</p>
+          </div>
+          <div>
+            <label class="text-sm font-medium text-gray-500">DNS记录数量</label>
+            <p class="mt-1 text-sm text-gray-900">{{ recordsCount }} 条记录</p>
+          </div>
+        </div>
+      </Card>
 
-        <!-- Nameservers Card -->
-        <Card title="Nameservers">
-          <div class="space-y-2">
-            <div v-for="(ns, index) in domainDetail.nameservers" :key="index"
-              class="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
-              <span class="font-mono text-sm">{{ ns }}</span>
-              <Button variant="ghost" size="sm" @click="copyToClipboard(ns)">
-                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <!-- Nameservers Card -->
+      <Card title="Nameservers">
+        <div class="space-y-2">
+          <div v-for="(ns, index) in domainDetail.nameservers" :key="index"
+            class="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+            <span class="font-mono text-sm">{{ ns }}</span>
+            <Button variant="ghost" size="sm" @click="copyToClipboard(ns)">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                  d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
+              </svg>
+            </Button>
+          </div>
+        </div>
+      </Card>
+
+      <!-- DNS Records Card -->
+      <Card>
+        <template #header>
+          <div class="flex items-center justify-between w-full">
+            <h3 class="text-lg font-semibold text-gray-900">DNS 记录</h3>
+            <div class="flex items-center space-x-2">
+              <Button @click="fetchDNSRecords" variant="ghost" size="sm" :disabled="dnsLoading">
+                <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                    d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                    d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
                 </svg>
+                刷新
+              </Button>
+              <Button @click="handleAddDNSRecord" size="sm">
+                添加记录
               </Button>
             </div>
           </div>
-        </Card>
+        </template>
 
-        <!-- DNS Records Card -->
-        <Card>
-          <template #header>
-            <div class="flex items-center justify-between w-full">
-              <h3 class="text-lg font-semibold text-gray-900">DNS 记录</h3>
-              <div class="flex items-center space-x-2">
-                <Button @click="fetchDNSRecords" variant="ghost" size="sm" :disabled="dnsLoading">
-                  <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                      d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-                  </svg>
-                  刷新
-                </Button>
-                <Button @click="handleAddDNSRecord" size="sm">
-                  添加记录
-                </Button>
-              </div>
-            </div>
-          </template>
+        <!-- DNS Records Loading -->
+        <div v-if="dnsLoading" class="text-center py-8">
+          <LoadingSpinner size="sm" />
+          <p class="mt-2 text-sm text-gray-500">正在加载DNS记录...</p>
+        </div>
 
-          <!-- DNS Records Loading -->
-          <div v-if="dnsLoading" class="text-center py-8">
-            <LoadingSpinner size="sm" />
-            <p class="mt-2 text-sm text-gray-500">正在加载DNS记录...</p>
+        <!-- DNS Records Error -->
+        <div v-else-if="dnsError" class="text-center py-8">
+          <Alert variant="error" title="DNS记录加载失败">
+            {{ dnsError }}
+          </Alert>
+        </div>
+
+        <!-- DNS Records List -->
+        <div v-if="hasRecords" class="space-y-3">
+          <TransitionGroup name="dns-record" tag="div" class="space-y-3">
+            <DNSRecordItem v-for="record in memoizedRecords" :key="`record-${record.id}`" :record="record"
+              :editing="false" @edit="handleEditDNSRecord" @delete="handleDeleteDNSRecord" />
+          </TransitionGroup>
+        </div>
+
+        <!-- Empty State -->
+        <div v-else class="text-center py-12">
+          <div class="text-gray-400 mb-6">
+            <svg class="mx-auto h-12 w-12" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
+                d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+            </svg>
           </div>
+          <h3 class="text-lg font-medium text-gray-900 mb-2">暂无DNS记录</h3>
+          <p class="text-sm text-gray-500 mb-6 max-w-sm mx-auto">
+            DNS记录用于将您的域名指向服务器或其他资源。添加第一条记录开始配置您的域名。
+          </p>
+          <Button @click="handleAddDNSRecord" size="sm" class="inline-flex items-center">
+            <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+            </svg>
+            添加第一条记录
+          </Button>
+        </div>
+      </Card>
 
-          <!-- DNS Records Error -->
-          <div v-else-if="dnsError" class="text-center py-8">
-            <Alert variant="error" title="DNS记录加载失败">
-              {{ dnsError }}
-            </Alert>
-          </div>
-
-          <!-- DNS Records List -->
-          <div v-if="hasRecords" class="space-y-3">
-            <TransitionGroup name="dns-record" tag="div" class="space-y-3">
-              <DNSRecordItem v-for="record in memoizedRecords" :key="`record-${record.id}`" :record="record"
-                :editing="false" @edit="handleEditDNSRecord" @delete="handleDeleteDNSRecord" />
-            </TransitionGroup>
-          </div>
-
-          <!-- Empty State -->
-          <div v-else class="text-center py-12">
-            <div class="text-gray-400 mb-6">
-              <svg class="mx-auto h-12 w-12" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
-                  d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-              </svg>
-            </div>
-            <h3 class="text-lg font-medium text-gray-900 mb-2">暂无DNS记录</h3>
-            <p class="text-sm text-gray-500 mb-6 max-w-sm mx-auto">
-              DNS记录用于将您的域名指向服务器或其他资源。添加第一条记录开始配置您的域名。
-            </p>
-            <Button @click="handleAddDNSRecord" size="sm" class="inline-flex items-center">
-              <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
-              </svg>
-              添加第一条记录
-            </Button>
-          </div>
-        </Card>
-      </div>
-
-      <!-- Sidebar -->
-      <div class="space-y-6">
-        <!-- SSL Certificate Management -->
-        <SSLCertificateManager :domain-id="props.domainId" :certificate="domainDetail.sslCertificate"
-          @certificate-updated="handleSSLCertificateUpdated" />
-
-      </div>
+      <!-- SSL Certificate Management - Moved to bottom -->
+      <SSLCertificateManager :domain-id="props.domainId" :certificate="domainDetail.sslCertificate"
+        @certificate-updated="handleSSLCertificateUpdated" />
     </div>
 
     <!-- DNS Record Modal -->
@@ -341,6 +334,9 @@ const handleSaveDNSRecord = async (data: CreateDNSRecordRequest) => {
   try {
     dnsRecordModalLoading.value = true
     dnsRecordModalError.value = null
+
+    // Debug: Log the received data to ensure proxied is correct
+    console.log('Received DNS record data in handleSaveDNSRecord:', data)
 
     if (editingRecord.value) {
       // Update existing record

@@ -1,31 +1,31 @@
 <template>
   <div class="border border-gray-200 rounded-lg p-4 hover:border-gray-300 transition-colors">
     <div class="flex items-center justify-between">
-      <div class="flex-1 grid grid-cols-1 md:grid-cols-4 gap-4">
+      <div class="flex-1 grid grid-cols-1 lg:grid-cols-12 gap-4">
         <!-- Type -->
-        <div>
+        <div class="lg:col-span-2">
           <label class="text-xs font-medium text-gray-500 uppercase tracking-wide">类型</label>
           <p class="mt-1 text-sm font-mono text-gray-900">{{ record.type }}</p>
         </div>
 
         <!-- Name -->
-        <div>
+        <div class="lg:col-span-3">
           <label class="text-xs font-medium text-gray-500 uppercase tracking-wide">名称</label>
-          <p class="mt-1 text-sm font-mono text-gray-900 truncate" :title="record.name">
+          <p class="mt-1 text-sm font-mono text-gray-900 break-all" :title="record.name">
             {{ record.name || '@' }}
           </p>
         </div>
 
         <!-- Content -->
-        <div>
+        <div class="lg:col-span-5">
           <label class="text-xs font-medium text-gray-500 uppercase tracking-wide">内容</label>
-          <p class="mt-1 text-sm font-mono text-gray-900 truncate" :title="record.content">
+          <p class="mt-1 text-sm font-mono text-gray-900 break-all" :title="record.content">
             {{ record.content }}
           </p>
         </div>
 
         <!-- TTL & Proxy -->
-        <div>
+        <div class="lg:col-span-2">
           <label class="text-xs font-medium text-gray-500 uppercase tracking-wide">TTL</label>
           <div class="mt-1 flex items-center space-x-2">
             <span class="text-sm text-gray-900">{{ formatTTL(record.ttl) }}</span>

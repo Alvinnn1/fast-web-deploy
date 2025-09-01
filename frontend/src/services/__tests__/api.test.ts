@@ -20,7 +20,7 @@ describe('ApiClient', () => {
   })
 
   describe('GET requests', () => {
-    it('should make successful GET request', async () => {
+    it('should make successful GET request without Content-Type header', async () => {
       const mockResponse = {
         success: true,
         data: [{ id: '1', name: 'test.com' }]
@@ -35,9 +35,8 @@ describe('ApiClient', () => {
 
       expect(fetch).toHaveBeenCalledWith('http://localhost:3000/api/domains', {
         method: 'GET',
-        headers: {
-          'Content-Type': 'application/json'
-        }
+        headers: {},
+        signal: expect.any(AbortSignal)
       })
       expect(result).toEqual(mockResponse)
     })
@@ -63,7 +62,7 @@ describe('ApiClient', () => {
   })
 
   describe('POST requests', () => {
-    it('should make successful POST request', async () => {
+    it('should make successful POST request with Content-Type header when body is present', async () => {
       const requestData = { name: 'example.com' }
       const mockResponse = {
         success: true,
@@ -82,9 +81,154 @@ describe('ApiClient', () => {
         headers: {
           'Content-Type': 'application/json'
         },
-        body: JSON.stringify(requestData)
+        body: JSON.stringify(requestData),
+        signal: expect.any(AbortSignal)
       })
       expect(result).toEqual(mockResponse)
+    })
+  })
+
+  describe('DELETE requests', () => {
+    it('should make successful DELETE request without Content-Type header', async () => {
+      const mockResponse = {
+        success: true,
+        message: 'DNS record deleted successfully'
+      }
+
+        ; (fetch as any).mockResolvedValueOnce({
+          ok: true,
+          json: () => Promise.resolve(mockResponse)
+        })
+
+      const result = await apiClient.delete('/api/domains/1/dns-records/123')
+
+      expect(fetch).toHaveBeenCalledWith('http://localhost:3000/api/domains/1/dns-records/123', {
+        method: 'DELETE',
+        headers: {},
+        signal: expect.any(AbortSignal)
+      })
+      expect(result).toEqual(mockResponse)
+    })
+  })
+
+  describe('PUT requests', () => {
+    it('should make successful PUT request with Content-Type header when body is present', async () => {
+      const requestData = { name: 'updated.com' }
+      const mockResponse = {
+        success: true,
+        data: { id: '1', name: 'updated.com' }
+      }
+
+        ; (fetch as any).mockResolvedValueOnce({
+          ok: true,
+          json: () => Promise.resolve(mockResponse)
+        })
+
+      const result = await apiClient.put('/api/domains/1', requestData)
+
+      expect(fetch).toHaveBeenCalledWith('http://localhost:3000/api/domains/1', {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(requestData),
+        signal: expect.any(AbortSignal)
+      })
+      expect(result).toEqual(mockResponse)
+    })
+  })
+
+  describe('Header configuration', () => {
+    it('should not set Content-Type header for requests without body', async () => {
+      const mockResponse = { success: true }
+
+        ; (fetch as any).mockResolvedValueOnce({
+          ok: true,
+          json: () => Promise.resolve(mockResponse)
+        })
+
+      await apiClient.request('/api/test', { method: 'DELETE' })
+
+      expect(fetch).toHaveBeenCalledWith('http://localhost:3000/api/test', {
+        method: 'DELETE',
+        headers: {},
+        signal: expect.any(AbortSignal)
+      })
+    })
+
+    it('should set Content-Type header for requests with body (non-GET)', async () => {
+      const mockResponse = { success: true }
+      const requestData = { test: 'data' }
+
+        ; (fetch as any).mockResolvedValueOnce({
+          ok: true,
+          json: () => Promise.resolve(mockResponse)
+        })
+
+      await apiClient.request('/api/test', {
+        method: 'POST',
+        body: JSON.stringify(requestData)
+      })
+
+      expect(fetch).toHaveBeenCalledWith('http://localhost:3000/api/test', {
+        method: 'POST',
+        body: JSON.stringify(requestData),
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        signal: expect.any(AbortSignal)
+      })
+    })
+
+    it('should not set Content-Type header for GET requests even with body', async () => {
+      const mockResponse = { success: true }
+
+        ; (fetch as any).mockResolvedValueOnce({
+          ok: true,
+          json: () => Promise.resolve(mockResponse)
+        })
+
+      await apiClient.request('/api/test', {
+        method: 'GET',
+        body: 'some-body'
+      })
+
+      expect(fetch).toHaveBeenCalledWith('http://localhost:3000/api/test', {
+        method: 'GET',
+        body: 'some-body',
+        headers: {},
+        signal: expect.any(AbortSignal)
+      })
+    })
+
+    it('should preserve custom headers while conditionally setting Content-Type', async () => {
+      const mockResponse = { success: true }
+      const requestData = { test: 'data' }
+
+        ; (fetch as any).mockResolvedValueOnce({
+          ok: true,
+          json: () => Promise.resolve(mockResponse)
+        })
+
+      await apiClient.request('/api/test', {
+        method: 'POST',
+        body: JSON.stringify(requestData),
+        headers: {
+          'Authorization': 'Bearer token123',
+          'X-Custom-Header': 'custom-value'
+        }
+      })
+
+      expect(fetch).toHaveBeenCalledWith('http://localhost:3000/api/test', {
+        method: 'POST',
+        body: JSON.stringify(requestData),
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer token123',
+          'X-Custom-Header': 'custom-value'
+        },
+        signal: expect.any(AbortSignal)
+      })
     })
   })
 
@@ -141,9 +285,8 @@ describe('Deployment status polling', () => {
       'http://localhost:3000/api/pages/test-project/deployment-status?deploymentId=deployment-123',
       {
         method: 'GET',
-        headers: {
-          'Content-Type': 'application/json'
-        }
+        headers: {},
+        signal: expect.any(AbortSignal)
       }
     )
     expect(result).toEqual(mockResponse)
@@ -203,5 +346,78 @@ describe('API convenience methods', () => {
     expect(typeof api.pages.getDeploymentStatus).toBe('function')
     expect(typeof api.pages.getDeploymentStatusById).toBe('function')
     expect(typeof api.pages.pollDeploymentStatus).toBe('function')
+  })
+
+  describe('DNS record operations', () => {
+    it('should delete DNS record without Content-Type header', async () => {
+      const mockResponse = { success: true, message: 'DNS record deleted' }
+
+        ; (fetch as any).mockResolvedValueOnce({
+          ok: true,
+          json: () => Promise.resolve(mockResponse)
+        })
+
+      const result = await api.domains.deleteDnsRecord('domain123', 'record456')
+
+      expect(fetch).toHaveBeenCalledWith(
+        'http://localhost:3000/api/domains/domain123/dns-records/record456',
+        {
+          method: 'DELETE',
+          headers: {},
+          signal: expect.any(AbortSignal)
+        }
+      )
+      expect(result).toEqual(mockResponse)
+    })
+
+    it('should create DNS record with Content-Type header', async () => {
+      const requestData = { type: 'A', name: 'test', content: '1.2.3.4' }
+      const mockResponse = { success: true, data: { id: 'new-record', ...requestData } }
+
+        ; (fetch as any).mockResolvedValueOnce({
+          ok: true,
+          json: () => Promise.resolve(mockResponse)
+        })
+
+      const result = await api.domains.createDnsRecord('domain123', requestData)
+
+      expect(fetch).toHaveBeenCalledWith(
+        'http://localhost:3000/api/domains/domain123/dns-records',
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify(requestData),
+          signal: expect.any(AbortSignal)
+        }
+      )
+      expect(result).toEqual(mockResponse)
+    })
+
+    it('should update DNS record with Content-Type header', async () => {
+      const requestData = { content: '5.6.7.8' }
+      const mockResponse = { success: true, data: { id: 'record456', ...requestData } }
+
+        ; (fetch as any).mockResolvedValueOnce({
+          ok: true,
+          json: () => Promise.resolve(mockResponse)
+        })
+
+      const result = await api.domains.updateDnsRecord('domain123', 'record456', requestData)
+
+      expect(fetch).toHaveBeenCalledWith(
+        'http://localhost:3000/api/domains/domain123/dns-records/record456',
+        {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify(requestData),
+          signal: expect.any(AbortSignal)
+        }
+      )
+      expect(result).toEqual(mockResponse)
+    })
   })
 })

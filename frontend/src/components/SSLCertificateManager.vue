@@ -14,8 +14,24 @@
 
         <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
           <div>
+            <label class="font-medium text-gray-500">证书 ID</label>
+            <p class="text-gray-900 font-mono text-xs">{{ certificate.id }}</p>
+          </div>
+          <div>
+            <label class="font-medium text-gray-500">证书类型</label>
+            <p class="text-gray-900">{{ certificate.type?.toUpperCase() || 'UNIVERSAL' }}</p>
+          </div>
+          <div>
             <label class="font-medium text-gray-500">颁发机构</label>
             <p class="text-gray-900">{{ certificate.issuer }}</p>
+          </div>
+          <div>
+            <label class="font-medium text-gray-500">验证方法</label>
+            <p class="text-gray-900">{{ certificate.validationMethod?.toUpperCase() || 'TXT' }}</p>
+          </div>
+          <div>
+            <label class="font-medium text-gray-500">有效期</label>
+            <p class="text-gray-900">{{ certificate.validityDays || 90 }} 天</p>
           </div>
           <div>
             <label class="font-medium text-gray-500">过期时间</label>
@@ -23,44 +39,43 @@
           </div>
         </div>
 
-        <!-- Expiry Warning -->
-        <div v-if="isExpiringSoon" class="mt-3 p-3 bg-yellow-50 border border-yellow-200 rounded-md">
-          <div class="flex items-center">
-            <svg class="w-4 h-4 text-yellow-600 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z" />
-            </svg>
-            <span class="text-sm text-yellow-800">
-              证书将在 {{ daysUntilExpiry }} 天后过期，建议及时续期
+        <!-- Covered Domains -->
+        <div v-if="certificate.hosts && certificate.hosts.length > 0" class="mt-4">
+          <label class="font-medium text-gray-500 text-sm">覆盖域名</label>
+          <div class="mt-2 flex flex-wrap gap-2">
+            <span v-for="host in certificate.hosts" :key="host"
+              class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+              {{ host }}
             </span>
           </div>
         </div>
 
-        <!-- Expired Warning -->
-        <div v-if="isExpired" class="mt-3 p-3 bg-red-50 border border-red-200 rounded-md">
+        <!-- Auto-renewal Info -->
+        <div v-if="isExpiringSoon || isExpired" class="mt-3 p-3 bg-green-50 border border-green-200 rounded-md">
           <div class="flex items-center">
-            <svg class="w-4 h-4 text-red-600 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg class="w-4 h-4 text-green-600 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
             </svg>
-            <span class="text-sm text-red-800">
-              证书已过期，请立即续期以确保网站安全
+            <span class="text-sm text-green-800">
+              {{ isExpired ? 'Cloudflare 正在自动更新您的SSL证书' : `证书将在 ${daysUntilExpiry} 天后自动续期` }}
             </span>
           </div>
         </div>
       </div>
 
-      <!-- Certificate Actions -->
-      <div class="flex flex-col sm:flex-row gap-2">
-        <Button @click="handleRenewCertificate" :disabled="loading" class="flex-1">
-          <LoadingSpinner v-if="loading && actionType === 'renew'" size="sm" class="mr-2" />
-          {{ loading && actionType === 'renew' ? '续期中...' : '续期证书' }}
-        </Button>
-
-        <Button @click="handleRevokeCertificate" variant="outline" :disabled="loading" class="flex-1">
-          <LoadingSpinner v-if="loading && actionType === 'revoke'" size="sm" class="mr-2" />
-          {{ loading && actionType === 'revoke' ? '撤销中...' : '撤销证书' }}
-        </Button>
+      <!-- Certificate Info Note -->
+      <div class="bg-blue-50 rounded-lg p-4">
+        <div class="flex items-center">
+          <svg class="w-5 h-5 text-blue-600 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+              d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+          </svg>
+          <div class="text-sm text-blue-800">
+            <p class="font-medium">自动管理</p>
+            <p>Cloudflare 会自动续期和管理您的SSL证书，无需手动操作。</p>
+          </div>
+        </div>
       </div>
     </div>
 
@@ -145,7 +160,7 @@ const emit = defineEmits<{
 const loading = ref(false)
 const error = ref<string | null>(null)
 const successMessage = ref<string | null>(null)
-const actionType = ref<'request' | 'renew' | 'revoke' | null>(null)
+const actionType = ref<'request' | null>(null)
 
 // Computed properties
 const statusClasses = computed(() => {
@@ -256,58 +271,5 @@ const handleRequestCertificate = async () => {
   }
 }
 
-// Handle certificate renewal
-const handleRenewCertificate = async () => {
-  if (!props.certificate) return
 
-  try {
-    loading.value = true
-    actionType.value = 'renew'
-    clearMessages()
-
-    // Use the same request SSL endpoint for renewal
-    const response = await api.domains.requestSSL(props.domainId)
-
-    if (response.success && response.data) {
-      successMessage.value = 'SSL证书续期成功！新证书将在几分钟内生效。'
-      emit('certificateUpdated', response.data)
-    } else {
-      throw new Error(response.message || 'SSL证书续期失败')
-    }
-  } catch (err: any) {
-    console.error('Failed to renew SSL certificate:', err)
-    error.value = err.message || 'SSL证书续期失败，请稍后重试'
-  } finally {
-    loading.value = false
-    actionType.value = null
-  }
-}
-
-// Handle certificate revocation
-const handleRevokeCertificate = async () => {
-  if (!props.certificate) return
-
-  if (!confirm('确定要撤销SSL证书吗？撤销后网站将无法通过HTTPS访问。')) {
-    return
-  }
-
-  try {
-    loading.value = true
-    actionType.value = 'revoke'
-    clearMessages()
-
-    // TODO: Implement revoke SSL certificate API endpoint
-    // For now, we'll simulate the action
-    await new Promise(resolve => setTimeout(resolve, 2000))
-
-    successMessage.value = 'SSL证书已成功撤销。'
-    emit('certificateUpdated', null)
-  } catch (err: any) {
-    console.error('Failed to revoke SSL certificate:', err)
-    error.value = err.message || 'SSL证书撤销失败，请稍后重试'
-  } finally {
-    loading.value = false
-    actionType.value = null
-  }
-}
 </script>

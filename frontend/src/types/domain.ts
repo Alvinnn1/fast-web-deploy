@@ -37,6 +37,10 @@ export interface SSLCertificate {
   status: SSLCertificateStatus;
   issuer: string;
   expiresAt: string;
+  hosts?: string[];
+  type?: string;
+  validationMethod?: string;
+  validityDays?: number;
 }
 
 // Domain detail model (extends Domain with additional info)

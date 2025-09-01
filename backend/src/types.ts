@@ -73,6 +73,10 @@ export interface SSLCertificate {
   status: 'active' | 'pending' | 'expired';
   issuer: string;
   expiresAt: string;
+  hosts?: string[];
+  type?: string;
+  validationMethod?: string;
+  validityDays?: number;
 }
 
 // Page Models

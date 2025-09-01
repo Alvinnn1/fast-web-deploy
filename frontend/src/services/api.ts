@@ -30,9 +30,15 @@ export class ApiClient {
       const controller = new AbortController()
       const timeoutId = setTimeout(() => controller.abort(), 30000) // 30 second timeout
 
+      // Conditionally set Content-Type header only when request has a body and is not a GET request
+      const headers: Record<string, string> = {}
+      if (options.body && options.method !== 'GET') {
+        headers['Content-Type'] = 'application/json'
+      }
+
       const response = await fetch(url, {
         headers: {
-          'Content-Type': 'application/json',
+          ...headers,
           ...options.headers,
         },
         signal: controller.signal,
@@ -101,10 +107,10 @@ export class ApiClient {
       }
 
       return data
-    } catch (error) {
+    } catch (error: any) {
       let apiError: ApiResponse<T>
 
-      if (error.name === 'AbortError') {
+      if (error?.name === 'AbortError') {
         // Request timeout
         apiError = {
           success: false,
@@ -124,9 +130,9 @@ export class ApiClient {
             details: error
           }
         }
-      } else if (error.success === false) {
+      } else if (error?.success === false) {
         // Already formatted API error
-        apiError = error
+        apiError = error as ApiResponse<T>
       } else {
         // Unknown error
         apiError = {
@@ -225,7 +231,12 @@ export class ApiClient {
 }
 
 // 创建默认的API客户端实例
-const baseURL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000'
+// 开发模式：使用相对路径利用Vite代理
+// 生产模式：使用环境变量指定的API基础URL（Cloudflare Workers）
+const isDevelopment = import.meta.env.DEV
+const baseURL = isDevelopment
+  ? '' // 开发模式：使用相对路径，让Vite代理处理
+  : (import.meta.env.VITE_API_BASE_URL || 'https://api.luckyjingwen.top') // 生产模式：使用Cloudflare Workers域名
 export const apiClient = new ApiClient(baseURL)
 
 // 导出API方法的便捷函数

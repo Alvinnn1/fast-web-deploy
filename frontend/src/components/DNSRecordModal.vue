@@ -67,7 +67,7 @@
         </p>
       </div>
 
-      <!-- Proxied (only for A and AAAA records) -->
+      <!-- Proxied (for A, AAAA, and CNAME records) -->
       <div v-if="showProxiedOption" class="flex items-center space-x-2">
         <input id="record-proxied" v-model="formData.proxied" type="checkbox" :disabled="loading"
           class="h-4 w-4 text-purple-600 focus:ring-purple-500 border-gray-300 rounded disabled:opacity-50" />
@@ -106,7 +106,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, watch, nextTick } from 'vue'
+import { ref, computed, watch } from 'vue'
 import Modal from './ui/Modal.vue'
 import Button from './ui/Button.vue'
 import Alert from './ui/Alert.vue'
@@ -135,7 +135,7 @@ const formData = ref<CreateDNSRecordRequest>({
   name: '',
   content: '',
   ttl: 1,
-  proxied: true
+  proxied: false
 })
 
 // Computed properties
@@ -143,7 +143,7 @@ const isEditing = computed(() => !!props.record)
 const modalTitle = computed(() => isEditing.value ? '编辑DNS记录' : '添加DNS记录')
 
 const showProxiedOption = computed(() => {
-  return ['A', 'AAAA'].includes(formData.value.type)
+  return ['A', 'AAAA', 'CNAME'].includes(formData.value.type)
 })
 
 const contentPlaceholder = computed(() => {
@@ -217,16 +217,29 @@ watch(() => props.isOpen, (isOpen) => {
   }
 })
 
-// Watch for type changes to reset proxied setting
-watch(() => formData.value.type, (newType) => {
-  if (!['A', 'AAAA'].includes(newType)) {
+// Watch for type changes to set appropriate proxied default
+watch(() => formData.value.type, (newType, oldType) => {
+  if (newType === 'CNAME') {
+    // CNAME records default to proxied = true
+    formData.value.proxied = true
+  } else if (['A', 'AAAA'].includes(newType)) {
+    // A and AAAA records keep their current proxied setting or default to false
+    // Only change if switching from a non-proxiable type
+    if (oldType && !['A', 'AAAA', 'CNAME'].includes(oldType)) {
+      formData.value.proxied = false
+    }
+  } else {
+    // Other record types cannot be proxied
     formData.value.proxied = false
   }
-})
+}, { immediate: true })
 
 // Handlers
 const handleSubmit = () => {
   if (!isFormValid.value || props.loading) return
+
+  // Debug: Log the form data to ensure proxied is correct
+  console.log('Submitting DNS record:', formData.value)
 
   emit('save', { ...formData.value })
 }

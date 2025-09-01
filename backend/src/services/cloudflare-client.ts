@@ -47,6 +47,10 @@ interface CloudflareSSLCertificate {
   status: string
   issuer: string
   expires_on: string
+  hosts?: string[]
+  type?: string
+  validation_method?: string
+  validity_days?: number
 }
 
 // Cloudflare Pages Project Types
@@ -307,15 +311,85 @@ export class CloudflareClient {
   }
 
   // SSL Certificate Management Methods
-  async getSSLCertificate(zoneId: string): Promise<CloudflareSSLCertificate> {
-    return this.makeRequest<CloudflareSSLCertificate>('GET', `/zones/${zoneId}/ssl/certificate_packs`)
+  async getSSLCertificates(zoneId: string): Promise<any[]> {
+    return this.makeRequest<any[]>('GET', `/zones/${zoneId}/ssl/certificate_packs`)
+  }
+
+  async getSSLCertificate(zoneId: string): Promise<CloudflareSSLCertificate | null> {
+    try {
+      const certificatePacks = await this.getSSLCertificates(zoneId)
+
+      if (!certificatePacks || certificatePacks.length === 0) {
+        return null
+      }
+
+      // Find the first active certificate pack
+      const activePack = certificatePacks.find(pack => pack.status === 'active')
+      if (!activePack) {
+        return null
+      }
+
+      // Get the primary certificate from the pack
+      const primaryCert = activePack.certificates?.find((cert: any) =>
+        cert.id === activePack.primary_certificate
+      ) || activePack.certificates?.[0]
+
+      if (!primaryCert) {
+        return null
+      }
+
+      return {
+        id: primaryCert.id,
+        status: primaryCert.status,
+        issuer: primaryCert.issuer || activePack.certificate_authority || 'Unknown',
+        expires_on: primaryCert.expires_on,
+        hosts: activePack.hosts || [],
+        type: activePack.type || 'universal',
+        validation_method: activePack.validation_method || 'txt',
+        validity_days: activePack.validity_days || 90
+      }
+    } catch (error) {
+      // If SSL certificates are not available or accessible, return null
+      return null
+    }
   }
 
   async requestSSLCertificate(zoneId: string): Promise<CloudflareSSLCertificate> {
-    return this.makeRequest<CloudflareSSLCertificate>('POST', `/zones/${zoneId}/ssl/certificate_packs`, {
-      type: 'advanced',
-      hosts: ['*']
-    })
+    // For Universal SSL, we typically don't need to create a new certificate pack
+    // Instead, we can trigger SSL certificate provisioning by enabling Universal SSL
+    try {
+      // First, try to get existing certificate
+      const existingCert = await this.getSSLCertificate(zoneId)
+      if (existingCert && existingCert.status === 'active') {
+        return existingCert
+      }
+
+      // If no active certificate, request a new Universal SSL certificate
+      const result = await this.makeRequest<any>('POST', `/zones/${zoneId}/ssl/certificate_packs`, {
+        type: 'universal',
+        hosts: [] // Let Cloudflare determine the hosts automatically
+      })
+
+      // Return the created certificate pack in the expected format
+      return {
+        id: result.id || result.certificates?.[0]?.id || 'pending',
+        status: result.status || 'pending',
+        issuer: result.certificate_authority || 'Cloudflare',
+        expires_on: result.certificates?.[0]?.expires_on || new Date(Date.now() + 90 * 24 * 60 * 60 * 1000).toISOString(),
+        hosts: result.hosts || [],
+        type: result.type || 'universal',
+        validation_method: result.validation_method || 'txt',
+        validity_days: result.validity_days || 90
+      }
+    } catch (error) {
+      // If certificate pack creation fails, it might be because Universal SSL is already enabled
+      // Try to get the existing certificate again
+      const existingCert = await this.getSSLCertificate(zoneId)
+      if (existingCert) {
+        return existingCert
+      }
+      throw error
+    }
   }
 
   // Pages Management Methods

@@ -21,10 +21,10 @@
           选择文件夹
         </label>
 
-        <!-- File Drop Zone -->
-        <div @drop="handleDrop" @dragover.prevent @dragenter.prevent :class="[
+        <!-- File Upload Zone -->
+        <div :class="[
           'border-2 border-dashed rounded-lg p-6 text-center transition-colors duration-200',
-          isDragOver ? 'border-purple-400 bg-purple-50' : 'border-gray-300',
+          'border-gray-300',
           loading ? 'opacity-50 pointer-events-none' : 'hover:border-purple-400 hover:bg-purple-50'
         ]">
           <input ref="fileInput" type="file" webkitdirectory webkitrelativepath @change="handleFileSelect"
@@ -35,7 +35,7 @@
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                 d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
             </svg>
-            <p class="text-gray-600 mb-2">拖拽文件夹到此处，或</p>
+            <p class="text-gray-600 mb-2">点击下方按钮选择文件夹</p>
             <Button type="button" variant="outline" @click="triggerFileSelect" :disabled="loading">
               选择文件夹
             </Button>
@@ -60,6 +60,7 @@
           <p>• 仅支持文件夹</p>
           <p>• 文件大小不能超过10MB</p>
           <p>• 文件夹应包含您的静态网站文件（HTML、CSS、JS等）</p>
+          <p>• 暂不支持SPA</p>
         </div>
       </div>
 
@@ -67,7 +68,7 @@
       <div v-if="uploadProgress > 0" class="space-y-2">
         <div class="flex justify-between text-sm">
           <span class="text-gray-600">上传进度</span>
-          <span class="text-gray-900">{{ uploadProgress }}%</span>
+          <span class="text-gray-900">{{ uploadProgress.toFixed(2) }}%</span>
         </div>
         <div class="w-full bg-gray-200 rounded-full h-2">
           <div class="bg-purple-600 h-2 rounded-full transition-all duration-300"
@@ -177,7 +178,7 @@ const loading = ref(false)
 const uploadProgress = ref(0)
 const uploadError = ref<string | null>(null)
 const uploadSuccess = ref(false)
-const isDragOver = ref(false)
+
 const fileInput = ref<HTMLInputElement | null>(null)
 const uploadPayload = ref<UploadPayload[]>([])
 const deploying = ref(false)
@@ -189,10 +190,10 @@ const statusPollingTimer = ref<NodeJS.Timeout | null>(null)
 
 // Computed properties
 const modalTitle = computed(() => {
-  if (!props.page) return '上传ZIP文件'
+  if (!props.page) return '上传文件夹'
   if (deploySuccess.value) return '部署成功'
   if (uploadSuccess.value) return '准备部署'
-  return props.page.status === 'created' ? '上传ZIP文件' : '更新页面内容'
+  return props.page.status === 'created' ? '上传文件夹' : '更新页面内容'
 })
 
 const isValidFile = computed(() => {
@@ -262,21 +263,7 @@ const handleFileSelect = (event: Event) => {
 
 }
 
-const handleDrop = (event: DragEvent) => {
-  event.preventDefault()
-  isDragOver.value = false
 
-  const files = event.dataTransfer?.files
-  if (files && files.length > 0) {
-    validateAndSetFile(files[0])
-  }
-}
-
-const validateAndSetFile = (file: File) => {
-  uploadError.value = null
-
-  selectedFile.value = file
-}
 
 const clearFile = () => {
   selectedFile.value = null
@@ -478,7 +465,6 @@ watch(() => props.isOpen, (isOpen) => {
     uploadProgress.value = 0
     uploadError.value = null
     uploadSuccess.value = false
-    isDragOver.value = false
     deploying.value = false
     deploySuccess.value = false
     deployError.value = null
@@ -500,14 +486,5 @@ watch(() => props.isOpen, (isOpen) => {
   // do NOT clear the status polling timer to allow background monitoring
 })
 
-// Handle drag events
-watch(isDragOver, (dragOver) => {
-  if (dragOver) {
-    document.addEventListener('dragleave', (e) => {
-      if (!e.relatedTarget) {
-        isDragOver.value = false
-      }
-    })
-  }
-})
+
 </script>

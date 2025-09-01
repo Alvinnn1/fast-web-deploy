@@ -19,7 +19,14 @@ export const config = {
 
   // Security configuration
   sessionSecret: process.env.SESSION_SECRET,
-  corsOrigins: process.env.CORS_ORIGINS?.split(',') || ['http://localhost:5173'],
+  corsOrigins: process.env.CORS_ORIGINS?.split(',') || [
+    'http://localhost:5173',
+    'http://127.0.0.1:5173',
+    'http://localhost:4173',
+    'http://127.0.0.1:4173',
+    'https://luckyjingwen.top',
+    'https://www.luckyjingwen.top'
+  ],
 
   // Logging configuration
   logLevel: process.env.LOG_LEVEL || 'info',
