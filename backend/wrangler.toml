@@ -32,8 +32,8 @@ pattern = "api.luckyjingwen.top/*"
 zone_name = "luckyjingwen.top"
 
 # Worker limits and configuration
-[limits]
-cpu_ms = 50
+# [limits]
+# cpu_ms = 50  # CPU limits not supported on Free plan
 
 # Placement configuration for optimal performance
 [placement]
