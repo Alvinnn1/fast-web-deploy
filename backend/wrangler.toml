@@ -1,6 +1,6 @@
 # Cloudflare Workers Configuration for Backend API
 name = "cloudflare-static-deployer-api"
-main = "worker-simple.ts"
+main = "worker.ts"
 compatibility_date = "2024-01-01"
 compatibility_flags = ["nodejs_compat"]
 
