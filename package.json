@@ -1,0 +1,39 @@
+{
+  "name": "cloudflare-static-deployer",
+  "version": "1.0.0",
+  "description": "A web application for deploying static websites to Cloudflare",
+  "private": true,
+  "workspaces": [
+    "frontend",
+    "backend"
+  ],
+  "scripts": {
+    "dev": "concurrently \"npm run dev:backend\" \"npm run dev:frontend\"",
+    "dev:frontend": "cd frontend && npm run dev",
+    "dev:backend": "cd backend && npm run dev",
+    "build": "npm run build:frontend && npm run build:backend",
+    "build:frontend": "cd frontend && npm run build",
+    "build:backend": "cd backend && npm run build:workers",
+    "lint": "npm run lint:frontend && npm run lint:backend",
+    "lint:frontend": "cd frontend && npm run lint",
+    "lint:backend": "cd backend && npm run lint",
+    "deploy:pages": "npm run build:frontend && cd frontend && npm run pages:deploy",
+    "deploy:workers": "npm run build:backend && cd backend && npm run wrangler:deploy",
+    "deploy:all": "npm run deploy:pages && npm run deploy:workers",
+    "pages:dev": "cd frontend && npm run pages:dev",
+    "workers:dev": "cd backend && npm run wrangler:dev",
+    "clean": "cd frontend && npm run clean && cd ../backend && rm -rf dist",
+    "validate": "cd frontend && npm run validate:static && cd ../backend && npm run workers:validate"
+  },
+  "devDependencies": {
+    "concurrently": "^8.2.2"
+  },
+  "engines": {
+    "node": ">=18.0.0",
+    "npm": ">=9.0.0"
+  },
+  "dependencies": {
+    "mime": "^4.0.7",
+    "axios": "^1.6.0"
+  }
+}

@@ -1,0 +1,56 @@
+# Security Headers for Cloudflare Pages
+/*
+  # Content Security Policy
+  Content-Security-Policy: default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://challenges.cloudflare.com https://static.cloudflareinsights.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com data:; img-src 'self' data: blob: https: https://avatars.cloudflare.com; connect-src 'self' https://api.cloudflare.com https://luckyjingwen.top https://challenges.cloudflare.com wss:; frame-src 'self' https://challenges.cloudflare.com; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'; upgrade-insecure-requests
+
+  # Security Headers
+  X-Content-Type-Options: nosniff
+  X-Frame-Options: DENY
+  X-XSS-Protection: 1; mode=block
+  Referrer-Policy: strict-origin-when-cross-origin
+  Strict-Transport-Security: max-age=31536000; includeSubDomains; preload
+
+  # Permissions Policy
+  Permissions-Policy: camera=(), microphone=(), geolocation=(), payment=(), usb=(), magnetometer=(), gyroscope=(), accelerometer=()
+
+  # Cross-Origin Policies
+  Cross-Origin-Opener-Policy: same-origin-allow-popups
+  Cross-Origin-Resource-Policy: cross-origin
+
+  # Cache Control for Security
+  Cache-Control: public, max-age=31536000, immutable
+
+# API Routes - Different CSP for API responses
+/api/*
+  Content-Security-Policy: default-src 'none'; frame-ancestors 'none'; base-uri 'none'
+  X-Content-Type-Options: nosniff
+  X-Frame-Options: DENY
+  X-XSS-Protection: 1; mode=block
+  Referrer-Policy: strict-origin-when-cross-origin
+  Cache-Control: no-cache, no-store, must-revalidate
+
+# Static Assets - Aggressive Caching
+/assets/*
+  Cache-Control: public, max-age=31536000, immutable
+  X-Content-Type-Options: nosniff
+
+# Service Worker
+/sw.js
+  Cache-Control: no-cache, no-store, must-revalidate
+  X-Content-Type-Options: nosniff
+
+# Manifest and Icons
+/manifest.json
+  Content-Type: application/manifest+json
+  Cache-Control: public, max-age=86400
+  X-Content-Type-Options: nosniff
+
+/favicon.ico
+  Cache-Control: public, max-age=86400
+  X-Content-Type-Options: nosniff
+
+# Health Check Endpoint
+/health
+  Content-Security-Policy: default-src 'none'
+  X-Content-Type-Options: nosniff
+  Cache-Control: no-cache, no-store, must-revalidate

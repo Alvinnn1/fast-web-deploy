@@ -1,0 +1,10 @@
+{
+  "version": 1,
+  "description": "Routing configuration for Cloudflare Pages",
+  "include": [
+    "/*"
+  ],
+  "exclude": [
+    "/api/*"
+  ]
+}

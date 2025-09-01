@@ -1,0 +1,6 @@
+# SPA fallback - redirect all non-asset requests to index.html
+# This ensures Vue Router can handle client-side routing
+/*    /index.html   200
+
+# API routes should be handled by Workers (not redirected)
+/api/*  /api/:splat  200

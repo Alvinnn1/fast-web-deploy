@@ -1,0 +1,218 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  font-family: Inter, system-ui, Avenir, Helvetica, Arial, sans-serif;
+  line-height: 1.5;
+  font-weight: 400;
+
+  color-scheme: light;
+  color: rgba(17, 24, 39, 0.87);
+  background-color: #fafafa;
+
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  -webkit-text-size-adjust: 100%;
+}
+
+body {
+  margin: 0;
+  min-width: 320px;
+  min-height: 100vh;
+  background: linear-gradient(135deg, #faf5ff 0%, #f3e8ff 100%);
+}
+
+#app {
+  width: 100%;
+  margin: 0 auto;
+  min-height: 100vh;
+}
+
+/* 自定义滚动条样式 */
+::-webkit-scrollbar {
+  width: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: #f1f5f9;
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #a855f7;
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #9333ea;
+}
+
+/* 通用动画类 */
+@layer utilities {
+  .animate-fade-in {
+    animation: fadeIn 0.3s ease-in-out;
+  }
+  
+  .animate-slide-up {
+    animation: slideUp 0.3s ease-out;
+  }
+  
+  .animate-scale-in {
+    animation: scaleIn 0.2s ease-out;
+  }
+  
+  .animate-bounce-in {
+    animation: bounceIn 0.4s ease-out;
+  }
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes scaleIn {
+  from {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@keyframes bounceIn {
+  0% {
+    opacity: 0;
+    transform: scale(0.3);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1.05);
+  }
+  70% {
+    transform: scale(0.9);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+/* 按钮悬停效果增强 */
+@layer components {
+  .btn-hover-lift {
+    transition: all 0.2s ease;
+  }
+  
+  .btn-hover-lift:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(168, 85, 247, 0.15);
+  }
+  
+  .btn-hover-lift:active {
+    transform: translateY(0);
+  }
+}
+
+/* 卡片悬停效果 */
+@layer components {
+  .card-hover {
+    transition: all 0.2s ease;
+  }
+  
+  .card-hover:hover {
+    /* transform: translateY(-2px); */
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
+  }
+}
+
+/* 输入框聚焦效果增强 */
+@layer components {
+  .input-focus-glow {
+    transition: all 0.2s ease;
+  }
+  
+  .input-focus-glow:focus {
+    box-shadow: 0 0 0 3px rgba(168, 85, 247, 0.1);
+  }
+}
+
+/* 紫色渐变背景 */
+@layer utilities {
+  .bg-purple-gradient {
+    background: linear-gradient(135deg, #a855f7 0%, #9333ea 100%);
+  }
+  
+  .bg-purple-gradient-light {
+    background: linear-gradient(135deg, #faf5ff 0%, #f3e8ff 100%);
+  }
+}
+
+/* 加载动画优化 */
+@layer components {
+  .loading-pulse {
+    animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+  }
+}
+
+/* 通知动画 */
+.notification-enter-active {
+  transition: all 0.3s ease-out;
+}
+
+.notification-leave-active {
+  transition: all 0.3s ease-in;
+}
+
+.notification-enter-from {
+  opacity: 0;
+  transform: translateX(100%) scale(0.95);
+}
+
+.notification-leave-to {
+  opacity: 0;
+  transform: translateX(100%) scale(0.95);
+}
+
+.notification-move {
+  transition: transform 0.3s ease;
+}
+
+/* 模态框动画增强 */
+.modal-enter-active {
+  transition: all 0.3s ease-out;
+}
+
+.modal-leave-active {
+  transition: all 0.2s ease-in;
+}
+
+.modal-enter-from {
+  opacity: 0;
+  transform: scale(0.95);
+}
+
+.modal-leave-to {
+  opacity: 0;
+  transform: scale(0.95);
+}

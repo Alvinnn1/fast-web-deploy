@@ -1,0 +1,39 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "target": "ES2022",
+    "lib": [
+      "ES2022",
+      "WebWorker"
+    ],
+    "module": "ESNext",
+    "moduleResolution": "Node",
+    "types": [
+      "@cloudflare/workers-types",
+      "node"
+    ],
+    "resolveJsonModule": true,
+    "allowSyntheticDefaultImports": true,
+    "esModuleInterop": true,
+    "allowJs": true,
+    "sourceMap": false,
+    "outDir": "./dist-workers",
+    "rootDir": ".",
+    "removeComments": true,
+    "noEmitOnError": true,
+    "strict": true,
+    "skipLibCheck": true,
+    "forceConsistentCasingInFileNames": true
+  },
+  "include": [
+    "worker.ts",
+    "src/**/*"
+  ],
+  "exclude": [
+    "node_modules",
+    "dist",
+    "dist-workers",
+    "**/*.test.ts",
+    "scripts/**/*"
+  ]
+}

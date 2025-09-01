@@ -1,0 +1,44 @@
+# Cloudflare Workers Configuration for Backend API
+name = "cloudflare-static-deployer-api"
+main = "worker.ts"
+compatibility_date = "2024-01-01"
+compatibility_flags = ["nodejs_compat"]
+
+# Worker configuration
+[build]
+command = "npm run build:workers"
+cwd = "."
+watch_dir = ["src", "worker.ts"]
+
+# Production Environment Variables
+[vars]
+NODE_ENV = "production"
+CORS_ORIGINS = "https://luckyjingwen.top,https://www.luckyjingwen.top,https://cloudflare-static-deployer.pages.dev"
+API_VERSION = "v1"
+LOG_LEVEL = "info"
+
+# Security Configuration
+ENABLE_SECURITY_HEADERS = "true"
+ENABLE_CSP = "true"
+ENABLE_RATE_LIMITING = "true"
+RATE_LIMIT_MAX = "100"
+RATE_LIMIT_WINDOW = "900000"
+MAX_FILE_SIZE = "10485760"
+ALLOWED_FILE_TYPES = "application/zip,application/x-zip-compressed"
+
+# Routes configuration
+[[routes]]
+pattern = "api.luckyjingwen.top/*"
+zone_name = "luckyjingwen.top"
+
+# Worker limits and configuration
+[limits]
+cpu_ms = 50
+
+# Placement configuration for optimal performance
+[placement]
+mode = "smart"
+
+# Observability configuration
+[observability]
+enabled = true
