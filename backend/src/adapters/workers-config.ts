@@ -129,9 +129,10 @@ export class WorkersConfigManager {
       errors.push('CLOUDFLARE_ACCOUNT_ID is required')
     }
 
-    if (!this.config.cloudflareEmail) {
-      errors.push('CLOUDFLARE_EMAIL is required')
-    }
+    // CLOUDFLARE_EMAIL is optional for newer API tokens
+    // if (!this.config.cloudflareEmail) {
+    //   errors.push('CLOUDFLARE_EMAIL is required')
+    // }
 
     // Validate CORS origins
     if (this.config.corsOrigins.length === 0) {
