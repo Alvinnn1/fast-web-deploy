@@ -225,7 +225,8 @@ export class ApiClient {
 }
 
 // 创建默认的API客户端实例
-export const apiClient = new ApiClient()
+const baseURL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000'
+export const apiClient = new ApiClient(baseURL)
 
 // 导出API方法的便捷函数
 export const api = {
