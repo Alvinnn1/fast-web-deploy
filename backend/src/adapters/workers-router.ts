@@ -35,9 +35,7 @@ export class WorkersRouter {
   private pagesHandler: PagesHandler
   private configManager: WorkersConfigManager
   private middleware: WorkersMiddleware
-  private corsOrigins: string[]
-
-  constructor(private env: Env) {
+  constructor(env: Env) {
     this.configManager = new WorkersConfigManager(env)
 
     // Validate configuration
@@ -51,7 +49,6 @@ export class WorkersRouter {
     this.cloudflareClient = new WorkersCloudflareClient(env)
     this.domainsHandler = new DomainsHandler(this.cloudflareClient)
     this.pagesHandler = new PagesHandler(this.cloudflareClient)
-    this.corsOrigins = this.configManager.get('corsOrigins')
   }
 
   async route(request: Request): Promise<Response> {
@@ -187,8 +184,5 @@ export class WorkersRouter {
     return this.middleware.addCorsHeaders(response, request)
   }
 
-  private isOriginAllowed(origin: string | null): string | null {
-    if (!origin) return null
-    return this.corsOrigins.includes(origin) ? origin : null
-  }
+
 }

@@ -1,14 +1,14 @@
 # Cloudflare Workers Configuration for Backend API
 name = "cloudflare-static-deployer-api"
-main = "worker.ts"
+main = "worker-simple.ts"
 compatibility_date = "2024-01-01"
 compatibility_flags = ["nodejs_compat"]
 
 # Worker configuration
 [build]
-command = "npm run build:workers"
+command = "echo 'No build needed for simple worker'"
 cwd = "."
-watch_dir = ["src", "worker.ts"]
+watch_dir = ["worker-simple.ts"]
 
 # Production Environment Variables
 [vars]

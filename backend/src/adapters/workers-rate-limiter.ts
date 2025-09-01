@@ -31,7 +31,6 @@ export class WorkersRateLimiter {
    */
   async checkRateLimit(key: string, config: RateLimitConfig): Promise<RateLimitResult> {
     const now = Date.now()
-    const windowStart = now - config.window
     const rateLimitKey = config.keyPrefix ? `${config.keyPrefix}:${key}` : key
 
     // Get current state
@@ -133,7 +132,7 @@ export class WorkersRateLimiter {
       'default': { max: 60, window: 300000 } // 60 requests per 5 minutes
     }
 
-    return endpointLimits[endpoint] || endpointLimits['default']
+    return endpointLimits[endpoint] || endpointLimits['default']!
   }
 
   /**

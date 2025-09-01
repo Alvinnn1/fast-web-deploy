@@ -17,8 +17,7 @@ interface PagesAnalyticsQuery {
 export async function monitoringRoutes(fastify: FastifyInstance) {
   // Analytics endpoints
   fastify.get('/api/analytics/zone', async (
-    request: FastifyRequest<{ Querystring: AnalyticsQuery }>,
-    reply: FastifyReply
+    request: FastifyRequest<{ Querystring: AnalyticsQuery }>
   ) => {
     try {
       const { zone_id, since, until } = request.query
@@ -34,8 +33,7 @@ export async function monitoringRoutes(fastify: FastifyInstance) {
   })
 
   fastify.get('/api/analytics/pages', async (
-    request: FastifyRequest<{ Querystring: PagesAnalyticsQuery }>,
-    reply: FastifyReply
+    request: FastifyRequest<{ Querystring: PagesAnalyticsQuery }>
   ) => {
     try {
       const { account_id, project_name } = request.query
@@ -50,7 +48,7 @@ export async function monitoringRoutes(fastify: FastifyInstance) {
     }
   })
 
-  fastify.get('/api/monitoring/metrics', async (request: FastifyRequest, reply: FastifyReply) => {
+  fastify.get('/api/monitoring/metrics', async () => {
     try {
       const metrics = await analyticsService.getMonitoringMetrics()
 
@@ -64,7 +62,7 @@ export async function monitoringRoutes(fastify: FastifyInstance) {
   })
 
   // Health monitoring endpoints
-  fastify.get('/api/monitoring/health', async (request: FastifyRequest, reply: FastifyReply) => {
+  fastify.get('/api/monitoring/health', async (_request, reply: FastifyReply) => {
     try {
       const healthResult = await healthCheckService.performHealthCheck()
 
@@ -88,7 +86,7 @@ export async function monitoringRoutes(fastify: FastifyInstance) {
   })
 
   // System information endpoint
-  fastify.get('/api/monitoring/system', async (request: FastifyRequest, reply: FastifyReply) => {
+  fastify.get('/api/monitoring/system', async () => {
     try {
       const systemInfo = {
         node_version: process.version,
@@ -111,7 +109,7 @@ export async function monitoringRoutes(fastify: FastifyInstance) {
   })
 
   // Deployment status endpoint
-  fastify.get('/api/monitoring/deployment', async (request: FastifyRequest, reply: FastifyReply) => {
+  fastify.get('/api/monitoring/deployment', async () => {
     try {
       const deploymentInfo = {
         version: process.env.npm_package_version || '1.0.0',

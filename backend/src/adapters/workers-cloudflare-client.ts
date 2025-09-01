@@ -62,7 +62,7 @@ export class WorkersCloudflareClient {
         await this.handleHttpError(response)
       }
 
-      const cloudflareResponse: CloudflareResponse<T> = await response.json()
+      const cloudflareResponse = await response.json() as CloudflareResponse<T>
 
       if (!cloudflareResponse.success) {
         const errorMessage = cloudflareResponse.errors?.[0]?.message || 'Cloudflare API request failed'
@@ -220,7 +220,7 @@ export class WorkersCloudflareClient {
       await this.handleHttpError(response)
     }
 
-    const cloudflareResponse: CloudflareResponse<any> = await response.json()
+    const cloudflareResponse = await response.json() as CloudflareResponse<any>
 
     if (!cloudflareResponse.success) {
       const errorMessage = cloudflareResponse.errors?.[0]?.message || 'Pages deployment with manifest failed'
@@ -258,7 +258,7 @@ export class WorkersCloudflareClient {
       )
     }
 
-    return accounts[0].id
+    return accounts[0]!.id
   }
 
   getConfiguredAccountId(): string {
@@ -343,7 +343,7 @@ export class WorkersCloudflareClient {
         }
       }
 
-      return await response.json()
+      return await response.json() as CheckMissingAssetsResponse
     } catch (error) {
       if (error instanceof AppError) {
         throw error
@@ -407,7 +407,7 @@ export class WorkersCloudflareClient {
         }
       }
 
-      return await response.json()
+      return await response.json() as AssetsUploadResponse
     } catch (error) {
       if (error instanceof AppError) {
         throw error

@@ -61,39 +61,39 @@ export class DomainsHandler {
 
       // GET /api/domains/:id - Get domain details
       if (pathParts.length === 3 && pathParts[1] === 'domains' && method === 'GET') {
-        const domainId = pathParts[2]
+        const domainId = pathParts[2]!
         return this.getDomainDetails(domainId)
       }
 
       // GET /api/domains/:id/dns-records - Get DNS records for a domain
       if (pathParts.length === 4 && pathParts[1] === 'domains' && pathParts[3] === 'dns-records' && method === 'GET') {
-        const domainId = pathParts[2]
+        const domainId = pathParts[2]!
         return this.getDNSRecords(domainId)
       }
 
       // POST /api/domains/:id/dns-records - Create DNS record
       if (pathParts.length === 4 && pathParts[1] === 'domains' && pathParts[3] === 'dns-records' && method === 'POST') {
-        const domainId = pathParts[2]
+        const domainId = pathParts[2]!
         return this.createDNSRecord(request, domainId)
       }
 
       // PUT /api/domains/:id/dns-records/:recordId - Update DNS record
       if (pathParts.length === 5 && pathParts[1] === 'domains' && pathParts[3] === 'dns-records' && method === 'PUT') {
-        const domainId = pathParts[2]
-        const recordId = pathParts[4]
+        const domainId = pathParts[2]!
+        const recordId = pathParts[4]!
         return this.updateDNSRecord(request, domainId, recordId)
       }
 
       // DELETE /api/domains/:id/dns-records/:recordId - Delete DNS record
       if (pathParts.length === 5 && pathParts[1] === 'domains' && pathParts[3] === 'dns-records' && method === 'DELETE') {
-        const domainId = pathParts[2]
-        const recordId = pathParts[4]
+        const domainId = pathParts[2]!
+        const recordId = pathParts[4]!
         return this.deleteDNSRecord(domainId, recordId)
       }
 
       // POST /api/domains/:id/ssl-certificate - Request SSL certificate
       if (pathParts.length === 4 && pathParts[1] === 'domains' && pathParts[3] === 'ssl-certificate' && method === 'POST') {
-        const domainId = pathParts[2]
+        const domainId = pathParts[2]!
         return this.requestSSLCertificate(domainId)
       }
 
@@ -114,7 +114,7 @@ export class DomainsHandler {
   }
 
   private async createDomain(request: Request): Promise<Response> {
-    const body: CreateDomainRequest = await request.json()
+    const body = await request.json() as CreateDomainRequest
     const { name, nameservers } = body
 
     // Validate domain name
@@ -198,7 +198,7 @@ export class DomainsHandler {
       throw WorkersErrorHandler.createValidationError('Domain ID is required')
     }
 
-    const body: CreateDNSRecordRequest = await request.json()
+    const body = await request.json() as CreateDNSRecordRequest
     const { type, name, content, ttl, proxied } = body
 
     // Validate required fields
@@ -262,7 +262,7 @@ export class DomainsHandler {
       throw WorkersErrorHandler.createValidationError('DNS record ID is required')
     }
 
-    const body: UpdateDNSRecordRequest = await request.json()
+    const body = await request.json() as UpdateDNSRecordRequest
     const { type, name, content, ttl } = body
 
     // Validate required fields

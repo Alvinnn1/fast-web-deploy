@@ -1,0 +1,20 @@
+import dotenv from 'dotenv';
+const envFile = process.env.NODE_ENV === 'production' ? '.env.production' : '.env';
+dotenv.config({ path: envFile });
+export const config = {
+    nodeEnv: process.env.NODE_ENV || 'development',
+    port: parseInt(process.env.PORT || '3000', 10),
+    host: process.env.HOST || '0.0.0.0',
+    cloudflareApiToken: process.env.CLOUDFLARE_API_TOKEN || 'F_Ce0FBCmUmaRF0REv11Jt81TgQGMMgEbXKhv37Z',
+    cloudflareApiKey: process.env.CLOUDFLARE_API_KEY,
+    cloudflareAccountId: process.env.CLOUDFLARE_ACCOUNT_ID || '03a089b46316b504243477dd3857196b',
+    cloudflareEmail: process.env.CLOUDFLARE_EMAIL || 'dengjingwen@joyme.sg',
+    cloudflareApiBaseUrl: 'https://api.cloudflare.com/client/v4',
+    sessionSecret: process.env.SESSION_SECRET,
+    corsOrigins: process.env.CORS_ORIGINS?.split(',') || ['http://localhost:5173'],
+    logLevel: process.env.LOG_LEVEL || 'info',
+    maxFileSize: parseInt(process.env.MAX_FILE_SIZE || '10485760', 10),
+    allowedFileTypes: process.env.ALLOWED_FILE_TYPES?.split(',') || ['application/zip'],
+    rateLimitMax: parseInt(process.env.RATE_LIMIT_MAX || '100', 10),
+    rateLimitWindow: parseInt(process.env.RATE_LIMIT_WINDOW || '900000', 10)
+};

@@ -155,19 +155,19 @@ export class PagesHandler {
 
       // POST /api/pages/:projectName/deploy - Deploy page
       if (pathParts.length === 4 && pathParts[1] === 'pages' && pathParts[3] === 'deploy' && method === 'POST') {
-        const projectName = pathParts[2]
+        const projectName = pathParts[2]!
         return this.deployPage(request, projectName)
       }
 
       // GET /api/pages/:projectName/upload-url - Get direct upload URL
       if (pathParts.length === 4 && pathParts[1] === 'pages' && pathParts[3] === 'upload-url' && method === 'GET') {
-        const projectName = pathParts[2]
+        const projectName = pathParts[2]!
         return this.getUploadUrl(projectName)
       }
 
       // GET /api/pages/:projectName/deployment-status - Get deployment status
       if (pathParts.length === 4 && pathParts[1] === 'pages' && pathParts[3] === 'deployment-status' && method === 'GET') {
-        const projectName = pathParts[2]
+        const projectName = pathParts[2]!
         const deploymentId = url.searchParams.get('deploymentId')
         return this.getDeploymentStatus(projectName, deploymentId)
       }
@@ -203,7 +203,7 @@ export class PagesHandler {
   }
 
   private async createPage(request: Request): Promise<Response> {
-    const body: CreatePageRequest = await request.json()
+    const body = await request.json() as CreatePageRequest
     const { name } = body
 
     // Validate project name
@@ -260,7 +260,7 @@ export class PagesHandler {
       throw WorkersErrorHandler.createValidationError('Page project name is required')
     }
 
-    const body: DeployPageRequest = await request.json()
+    const body = await request.json() as DeployPageRequest
     const { manifest } = body
 
     if (!manifest || typeof manifest !== 'object') {
@@ -344,7 +344,7 @@ export class PagesHandler {
   }
 
   private async checkMissingAssets(request: Request): Promise<Response> {
-    const body: CheckMissingAssetsRequest = await request.json()
+    const body = await request.json() as CheckMissingAssetsRequest
     const { jwt, hashes } = body
 
     // Validate JWT token
@@ -378,7 +378,7 @@ export class PagesHandler {
   }
 
   private async uploadAssets(request: Request): Promise<Response> {
-    const body: AssetsUploadRequest = await request.json()
+    const body = await request.json() as AssetsUploadRequest
     const { jwt, payload } = body
 
     // Validate JWT token

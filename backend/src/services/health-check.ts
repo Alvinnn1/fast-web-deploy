@@ -1,6 +1,6 @@
 import { cloudflareClient } from './cloudflare-client.js'
 import { config } from '../config/index.js'
-import { AppError, ErrorType } from '../types.js'
+import { AppError } from '../types.js'
 
 export interface HealthCheckResult {
   status: 'healthy' | 'degraded' | 'unhealthy'
@@ -66,10 +66,12 @@ export class HealthCheckService {
       uptime,
       checks,
       environment: config.nodeEnv,
-      build_info: {
-        commit: process.env.GIT_COMMIT,
-        build_time: process.env.BUILD_TIME
-      }
+      ...(process.env.GIT_COMMIT || process.env.BUILD_TIME ? {
+        build_info: {
+          ...(process.env.GIT_COMMIT && { commit: process.env.GIT_COMMIT }),
+          ...(process.env.BUILD_TIME && { build_time: process.env.BUILD_TIME })
+        }
+      } : {})
     }
   }
 
@@ -149,7 +151,7 @@ export class HealthCheckService {
       // For containerized environments, we'll check available disk space
       // This is a simplified check - in production you might want more sophisticated monitoring
       const fs = await import('fs/promises')
-      const stats = await fs.stat('.')
+      await fs.stat('.')
 
       return {
         status: 'pass',

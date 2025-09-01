@@ -3,7 +3,7 @@ import multipart from '@fastify/multipart'
 import fastifyStatic from '@fastify/static'
 import { config } from './config/index.js'
 import { errorMiddleware } from './middleware/error-middleware.js'
-import { securityMiddleware } from './middleware/security-middleware.js'
+import { simpleSecurityMiddleware } from './middleware/security-middleware-simple.js'
 import { ResponseFormatter, ErrorHandler } from './utils/index.js'
 import { domainsRoutes } from './routes/domains.js'
 import { pagesRoutes } from './routes/pages.js'
@@ -25,7 +25,7 @@ const fastify = Fastify({
 await fastify.register(errorMiddleware)
 
 // Register security middleware (includes CORS, rate limiting, security headers)
-await securityMiddleware.register(fastify)
+await simpleSecurityMiddleware.register(fastify)
 
 await fastify.register(multipart, {
   limits: {
@@ -52,7 +52,7 @@ if (config.nodeEnv === 'production') {
 }
 
 // Enhanced health check route
-fastify.get('/health', async (request, reply) => {
+fastify.get('/health', async (_request, reply) => {
   try {
     const healthResult = await healthCheckService.performHealthCheck()
 

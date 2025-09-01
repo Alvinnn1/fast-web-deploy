@@ -54,7 +54,7 @@ export class WorkersRequestHandler {
     const params: Record<string, string> = {}
 
     for (let i = 0; i < patternParts.length; i++) {
-      const patternPart = patternParts[i]
+      const patternPart = patternParts[i]!
       if (patternPart.startsWith(':')) {
         const paramName = patternPart.slice(1)
         params[paramName] = pathParts[i] || ''
@@ -76,7 +76,7 @@ export class WorkersRequestHandler {
     }
 
     for (let i = 0; i < patternParts.length; i++) {
-      const patternPart = patternParts[i]
+      const patternPart = patternParts[i]!
       const pathPart = pathParts[i]
 
       if (!patternPart.startsWith(':') && patternPart !== pathPart) {

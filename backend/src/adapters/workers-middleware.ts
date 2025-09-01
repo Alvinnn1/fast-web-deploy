@@ -134,7 +134,7 @@ export class WorkersMiddleware {
     // Check other proxy headers
     const xForwardedFor = request.headers.get('X-Forwarded-For')
     if (xForwardedFor) {
-      return xForwardedFor.split(',')[0].trim()
+      return xForwardedFor.split(',')[0]!.trim()
     }
 
     const xRealIP = request.headers.get('X-Real-IP')

@@ -156,7 +156,7 @@ export class AnalyticsService {
     }
   }
 
-  private async getHttpRequestsAnalytics(zoneId: string, since: string, until: string) {
+  private async getHttpRequestsAnalytics(_zoneId: string, _since: string, _until: string) {
     // This would make actual API calls to Cloudflare Analytics API
     // For now, returning mock data structure
     return {
@@ -166,7 +166,7 @@ export class AnalyticsService {
     }
   }
 
-  private async getBandwidthAnalytics(zoneId: string, since: string, until: string) {
+  private async getBandwidthAnalytics(_zoneId: string, _since: string, _until: string) {
     // This would make actual API calls to Cloudflare Analytics API
     // For now, returning mock data structure
     return {
@@ -176,7 +176,7 @@ export class AnalyticsService {
     }
   }
 
-  private async getThreatsAnalytics(zoneId: string, since: string, until: string) {
+  private async getThreatsAnalytics(_zoneId: string, _since: string, _until: string) {
     // This would make actual API calls to Cloudflare Analytics API
     // For now, returning mock data structure
     return {
@@ -185,7 +185,7 @@ export class AnalyticsService {
     }
   }
 
-  private async getPerformanceAnalytics(zoneId: string, since: string, until: string) {
+  private async getPerformanceAnalytics(_zoneId: string, _since: string, _until: string) {
     // This would make actual API calls to Cloudflare Analytics API
     // For now, returning mock data structure
     return {
