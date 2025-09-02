@@ -25,7 +25,7 @@ This guide provides comprehensive information for developers working on the Clou
 - **npm**: Version 9.0.0 or higher
 - **Git**: Latest version
 - **VS Code**: Recommended IDE with extensions
-- **Docker**: For containerized development (optional)
+- **Wrangler CLI**: For Cloudflare Workers development
 
 ### Recommended VS Code Extensions
 
@@ -39,7 +39,7 @@ This guide provides comprehensive information for developers working on the Clou
     "ms-vscode.vscode-typescript-next",
     "ms-vscode.vscode-json",
     "redhat.vscode-yaml",
-    "ms-vscode-remote.remote-containers"
+    "ms-vscode.vscode-json"
   ]
 }
 ```
@@ -1485,13 +1485,15 @@ jobs:
     steps:
       - uses: actions/checkout@v3
       
-      - name: Build Docker image
-        run: docker build -t cloudflare-deployer .
-      
-      - name: Deploy to production
+      - name: Deploy to Cloudflare Workers
         run: |
-          # Add your deployment commands here
-          echo "Deploying to production..."
+          cd backend
+          npm run deploy:workers
+      
+      - name: Deploy to Cloudflare Pages
+        run: |
+          cd frontend
+          npm run deploy:pages
 ```
 
 #### Pre-commit Hooks

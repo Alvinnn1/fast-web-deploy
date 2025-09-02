@@ -307,7 +307,6 @@ export const api = {
         })
       })
     },
-    // 客户端直接上传
     assetsUpload: (jwt: string, payload: UploadPayload[]) => {
       return apiClient.request<{ result: { successful_key_count: number, unsuccessful_keys: string[] }, success: boolean }>('/api/pages/assets/upload', {
         method: 'POST',

@@ -7,7 +7,7 @@
         <div class="space-y-1 text-sm text-gray-600">
           <p><span class="font-medium">项目名称:</span> {{ page.name }}</p>
           <p><span class="font-medium">状态:</span> {{ getStatusText(page.status) }}</p>
-          <p v-if="page.url"><span class="font-medium">当前URL:</span>
+          <p v-if="page.url"><span class="font-medium">本次部署临时URL:</span>
             <a :href="page.url" target="_blank" class="text-purple-600 hover:text-purple-800 underline">
               {{ page.url }}
             </a>
@@ -60,7 +60,7 @@
           <p>• 仅支持文件夹</p>
           <p>• 文件大小不能超过10MB</p>
           <p>• 文件夹应包含您的静态网站文件（HTML、CSS、JS等）</p>
-          <p>• 暂不支持SPA</p>
+          <p>• SPA need a external <a class="text-purple-600 hover:text-purple-800 underline" href="https://developers.cloudflare.com/pages/configuration/redirects/" target="_blank">_redirects</a> file in root directory</p>
         </div>
       </div>
 
@@ -151,7 +151,6 @@ import { minimatch } from 'minimatch'
 
 const IGNORE_LIST = [
   "_worker.js",
-  "_redirects",
   "_headers",
   "_routes.json",
   "functions",
@@ -301,9 +300,9 @@ const handleDeploy = async () => {
       startStatusPolling(response.data.id)
 
       // Emit success event after a short delay
-      setTimeout(() => {
-        emit('success', response.data)
-      }, 1000)
+      // setTimeout(() => {
+      //   emit('success', response.data)
+      // }, 3000)
     } else {
       throw new Error(response.message || '部署失败')
     }

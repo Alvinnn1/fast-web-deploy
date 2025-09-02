@@ -107,7 +107,7 @@ MAX_FILE_SIZE=10485760
 部署完成后，访问以下 URL 验证：
 
 - **前端**: https://luckyjingwen.top
-- **API 健康检查** (如果启用): https://api.luckyjingwen.top/health
+- **API 健康检查**: https://api.luckyjingwen.top/health
 
 ## 故障排除
 

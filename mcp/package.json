@@ -1,0 +1,54 @@
+{
+  "name": "fast-web-deploy-mcp",
+  "version": "1.0.0",
+  "description": "MCP server for Fast Web deployment",
+  "main": "dist/index.js",
+  "bin": {
+    "fast-web-deploy-mcp": "dist/index.js"
+  },
+  "type": "module",
+  "scripts": {
+    "build": "tsc && chmod 755 dist/index.js",
+    "start": "node dist/index.js",
+    "dev": "tsx src/index.ts",
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "test:deploy": "node test-deployment.js",
+    "test:simple": "node test-simple.js",
+    "test:api": "node test-api.js",
+    "debug": "node debug-deployment.js",
+    "test:names": "node test-names.js",
+    "test:check": "node test-check-project.js"
+  },
+  "files": [
+    "dist"
+  ],
+  "keywords": [
+    "mcp",
+    "deployment",
+    "fast-web",
+    "cloudflare"
+  ],
+  "homepage": "https://luckyjingwen.top",
+  "author": "luckyjingwen@gmail.com",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Alvinnn1/fast-web-deploy"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^0.4.0",
+    "axios": "^1.6.0",
+    "form-data": "^4.0.0",
+    "fs-extra": "^11.1.1",
+    "hash-wasm": "^4.12.0",
+    "mime-types": "^2.1.35",
+    "path": "^0.12.7"
+  },
+  "devDependencies": {
+    "@types/fs-extra": "^11.0.4",
+    "@types/mime-types": "^2.1.4",
+    "@types/node": "^20.0.0",
+    "tsx": "^4.6.0",
+    "typescript": "^5.0.0"
+  }
+}

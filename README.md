@@ -46,9 +46,9 @@ A user-friendly web application that simplifies deploying static websites to Clo
 - **File Upload Handling** - Secure ZIP file processing
 
 ### Infrastructure
-- **Docker** - Containerized deployment
-- **Nginx** - Reverse proxy and static file serving
 - **Node.js 18+** - Runtime environment
+- **Cloudflare Workers** - Serverless backend deployment
+- **Cloudflare Pages** - Static site hosting
 
 ## 📁 Project Structure
 
@@ -83,7 +83,7 @@ cloudflare-static-deployer/
 - **Node.js** >= 18.0.0
 - **npm** >= 9.0.0
 - **Cloudflare Account** with API token
-- **Docker** (optional, for containerized deployment)
+- **Wrangler CLI** (for Cloudflare Workers deployment)
 
 ### Development Setup
 
@@ -117,18 +117,18 @@ cloudflare-static-deployer/
 
 See [DEPLOYMENT.md](DEPLOYMENT.md) for comprehensive deployment instructions.
 
-#### Quick Docker Deployment
+#### Quick Cloudflare Deployment
 
 ```bash
 # 1. Configure production environment
 cp .env.production.example .env.production
 # Edit .env.production with your settings
 
-# 2. Build and run with Docker Compose
-docker-compose up -d
+# 2. Deploy to Cloudflare Workers
+npm run deploy:workers
 
-# 3. Access the application
-open http://localhost:3000
+# 3. Deploy frontend to Cloudflare Pages
+npm run deploy:pages
 ```
 
 ## 🔧 Configuration
@@ -201,9 +201,8 @@ npm run start                 # Start production server
 npm run start:production      # Start with production environment
 
 # Deployment
-npm run docker:build          # Build Docker image
-npm run docker:run            # Run Docker container
-npm run docker:compose:up     # Start with Docker Compose
+npm run deploy:workers        # Deploy backend to Cloudflare Workers
+npm run deploy:pages          # Deploy frontend to Cloudflare Pages
 npm run deploy:prepare        # Prepare deployment package
 ```
 
@@ -368,10 +367,10 @@ npm run test:watch
 
 ## 🚀 Deployment Options
 
-1. **Docker (Recommended)**: Complete containerized deployment
-2. **Manual Deployment**: Traditional server deployment
-3. **Cloud Platforms**: Heroku, Railway, DigitalOcean App Platform
-4. **VPS/Dedicated Server**: Full control deployment
+1. **Cloudflare Workers (Recommended)**: Serverless backend deployment
+2. **Cloudflare Pages**: Static frontend hosting
+3. **Manual Deployment**: Traditional server deployment
+4. **Cloud Platforms**: Heroku, Railway, DigitalOcean App Platform
 
 See [DEPLOYMENT.md](DEPLOYMENT.md) for detailed instructions.
 

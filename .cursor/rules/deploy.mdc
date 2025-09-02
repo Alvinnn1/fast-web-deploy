@@ -1,0 +1,7 @@
+---
+description: deploy static assets
+globs:
+alwaysApply: true
+---
+
+deploy @test-folder to projectName ai-girl-demo with fast-web-deploy-mcp!
