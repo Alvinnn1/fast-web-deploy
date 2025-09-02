@@ -70,8 +70,6 @@ export class DeploymentService {
 
       console.log(`Found ${filesToUpload.length} files to upload out of ${files.length} total files`);
 
-      // 5. 上传资源（如果有需要上传的）
-      console.log({ filesToUpload })
       if (filesToUpload.length > 0) {
         console.log('Uploading assets...');
         const uploadResponse = await this.apiClient.uploadAssets(jwt, filesToUpload);
@@ -83,7 +81,6 @@ export class DeploymentService {
         console.log('No new assets to upload');
       }
 
-      console.log({ manifest })
       // 6. 部署项目
       console.log('Deploying project...');
       const deployResponse = await this.apiClient.deployProject(projectName, manifest);
@@ -133,9 +130,3 @@ export class DeploymentService {
     }
   }
 }
-
-const deploymentService = new DeploymentService();
-deploymentService.deploy({
-  projectName: 'ai-girl-demo',
-  folderPath: '/Users/dengjingwen/Documents/projects/fast-web/test-folder'
-}); 

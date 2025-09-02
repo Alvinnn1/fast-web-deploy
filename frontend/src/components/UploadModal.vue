@@ -88,7 +88,7 @@
 
       <!-- Deploy Success Display -->
       <Alert v-if="deploySuccess" variant="success" title="部署成功">
-        页面已成功部署，请等待部署完成
+        页面已成功部署
       </Alert>
 
       <!-- Deployment URL Display -->
@@ -101,7 +101,7 @@
           </svg>
           <div class="flex-1">
             <h3 class="text-sm font-medium text-green-800 mb-2">部署URL已生成</h3>
-            <p class="text-sm text-green-700 mb-2">您的页面已成功部署，可以通过以下链接访问：</p>
+            <p class="text-sm text-green-700 mb-2">您的页面已成功部署，可以通过以下链接访问(每次部署后会生成新的链接)：</p>
             <a :href="deploymentUrl" target="_blank"
               class="inline-flex items-center text-sm font-medium text-green-600 hover:text-green-800 underline break-all">
               {{ deploymentUrl }}

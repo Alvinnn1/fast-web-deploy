@@ -107,7 +107,7 @@ export class FileProcessor {
       const fullPath = path.join(this.folderPath, relativePath);
       const fileInfo = await this.processFile(fullPath, relativePath);
       files.push(fileInfo);
-      manifest[relativePath] = fileInfo.key;
+      manifest['/' + relativePath] = fileInfo.key;
     }
 
     return { files, manifest };
