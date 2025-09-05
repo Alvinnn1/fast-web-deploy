@@ -78,9 +78,10 @@ npm run dev
   "folderPath": "/Users/username/projects/my-website"
 }
 ```
+需要安装nodejs环境
+[click to download nodejs](https://nodejs.org/en/download)
 
-
-### 在MCP客户端中配置
+### 在MCP客户端中配置(例如Cursor)
 
 ```json
 {

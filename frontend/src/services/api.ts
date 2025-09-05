@@ -266,7 +266,6 @@ export const api = {
     getUploadUrl: (projectName: string) =>
       apiClient.get<UploadUrlResponse>(`/api/pages/${projectName}/upload-url`),
 
-
     getDeploymentStatus: (projectName: string) =>
       apiClient.get<DeploymentStatusDetail>(`/api/pages/${projectName}/deployment-status`),
 
@@ -316,5 +315,13 @@ export const api = {
         })
       })
     },
+
+    // 域名管理API
+    getDomains: (projectName: string) =>
+      apiClient.get<any[]>(`/api/pages/${projectName}/domains`),
+    addDomain: (projectName: string, domainName: string) =>
+      apiClient.post<any>(`/api/pages/${projectName}/domains`, { name: domainName }),
+    deleteDomain: (projectName: string, domainName: string) =>
+      apiClient.delete<void>(`/api/pages/${projectName}/domains/${domainName}`),
   },
 }

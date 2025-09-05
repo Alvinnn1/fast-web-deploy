@@ -415,4 +415,93 @@ export async function pagesRoutes(fastify: FastifyInstance) {
       return ErrorHandler.handleRouteError(reply, error)
     }
   })
+
+  // GET /api/pages/:projectName/domains - Get project domains
+  fastify.get<{ Params: { projectName: string } }>('/api/pages/:projectName/domains', async (request: FastifyRequest<{ Params: { projectName: string } }>, reply: FastifyReply) => {
+    try {
+      const { projectName } = request.params
+
+      if (!projectName || typeof projectName !== 'string') {
+        throw ErrorHandler.createValidationError('Page project name is required')
+      }
+
+      // Use configured account ID
+      const accountId = cloudflareClient.getConfiguredAccountId()
+
+      // Get project domains
+      const domains = await cloudflareClient.getPagesProjectDomains(accountId, projectName)
+
+      return ResponseFormatter.success(
+        domains,
+        'Project domains retrieved successfully'
+      )
+    } catch (error) {
+      return ErrorHandler.handleRouteError(reply, error)
+    }
+  })
+
+  // POST /api/pages/:projectName/domains - Add domain to project
+  fastify.post<{ Params: { projectName: string }; Body: { name: string } }>('/api/pages/:projectName/domains', async (request: FastifyRequest<{ Params: { projectName: string }; Body: { name: string } }>, reply: FastifyReply) => {
+    try {
+      const { projectName } = request.params
+      const { name } = request.body
+
+      if (!projectName || typeof projectName !== 'string') {
+        throw ErrorHandler.createValidationError('Page project name is required')
+      }
+
+      if (!name || typeof name !== 'string' || name.trim().length === 0) {
+        throw ErrorHandler.createValidationError('Domain name is required')
+      }
+
+      // Validate domain name format
+      const domainRegex = /^[a-zA-Z0-9]([a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(\.[a-zA-Z0-9]([a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*$/
+      const trimmedName = name.trim().toLowerCase()
+
+      if (!domainRegex.test(trimmedName)) {
+        throw ErrorHandler.createValidationError('Invalid domain name format')
+      }
+
+      // Use configured account ID
+      const accountId = cloudflareClient.getConfiguredAccountId()
+
+      // Add domain to project
+      const domain = await cloudflareClient.addPagesProjectDomain(accountId, projectName, trimmedName)
+
+      return ResponseFormatter.success(
+        domain,
+        'Domain added to project successfully'
+      )
+    } catch (error) {
+      return ErrorHandler.handleRouteError(reply, error)
+    }
+  })
+
+  // DELETE /api/pages/:projectName/domains/:domainName - Delete domain from project
+  fastify.delete<{ Params: { projectName: string; domainName: string } }>('/api/pages/:projectName/domains/:domainName', async (request: FastifyRequest<{ Params: { projectName: string; domainName: string } }>, reply: FastifyReply) => {
+    try {
+      const { projectName, domainName } = request.params
+
+      if (!projectName || typeof projectName !== 'string') {
+        throw ErrorHandler.createValidationError('Page project name is required')
+      }
+
+      if (!domainName || typeof domainName !== 'string') {
+        throw ErrorHandler.createValidationError('Domain name is required')
+      }
+
+      // Use configured account ID
+      const accountId = cloudflareClient.getConfiguredAccountId()
+
+      // Delete domain from project
+      await cloudflareClient.deletePagesProjectDomain(accountId, projectName, domainName)
+
+      return ResponseFormatter.success(
+        null,
+        'Domain deleted from project successfully'
+      )
+    } catch (error) {
+      return ErrorHandler.handleRouteError(reply, error)
+    }
+  })
 }

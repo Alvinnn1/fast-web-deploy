@@ -21,7 +21,8 @@ export enum ErrorType {
   SERVER_ERROR = 'SERVER_ERROR',
   NOT_FOUND_ERROR = 'NOT_FOUND_ERROR',
   DATABASE_ERROR = 'DATABASE_ERROR',
-  CONFIGURATION_ERROR = 'CONFIGURATION_ERROR'
+  CONFIGURATION_ERROR = 'CONFIGURATION_ERROR',
+  CONFLICT_ERROR = 'CONFLICT_ERROR'
 }
 
 // Custom Error Class
@@ -104,6 +105,26 @@ export interface DeploymentStatus {
   logs?: string[];
   url?: string;
   errorMessage?: string;
+}
+
+// Pages Project Domain Types
+export interface PagesProjectDomain {
+  id: string;
+  name: string;
+  status: 'active' | 'pending' | 'error';
+  certificate_authority?: string;
+  created_on: string;
+  modified_on: string;
+  validation_errors?: string[];
+}
+
+export interface AddDomainRequest {
+  name: string;
+}
+
+export interface AddDomainResponse {
+  domain: PagesProjectDomain;
+  message: string;
 }
 
 // Note: All data is now sourced directly from Cloudflare API

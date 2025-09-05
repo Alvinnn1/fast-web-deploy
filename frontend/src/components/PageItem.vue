@@ -83,6 +83,20 @@
           部署中...
         </Button>
 
+        <!-- Configure Domains button -->
+        <Button
+          @click.stop="handleConfigureDomains"
+          variant="outline"
+          size="sm"
+          class="text-purple-600 hover:text-purple-700 hover:bg-purple-50"
+        >
+          <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+              d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9v-9m0-9v9" />
+          </svg>
+          配置域名
+        </Button>
+
         <!-- Enhanced status icon with deployment progress -->
         <div class="flex-shrink-0">
           <!-- Deployed status with enhanced visual feedback -->
@@ -135,11 +149,20 @@
       </div>
     </div>
   </Card>
+
+  <!-- Domain Management Modal -->
+  <DomainManagementModal
+    :isOpen="showDomainModal"
+    :projectName="page.name"
+    @close="handleDomainModalClose"
+    @refresh="handleDomainModalRefresh"
+  />
 </template>
 
 <script setup lang="ts">
-import { computed } from 'vue'
+import { computed, ref } from 'vue'
 import { Card, Button } from '@/components/ui'
+import DomainManagementModal from './DomainManagementModal.vue'
 import type { Page } from '@/types'
 
 // Props
@@ -155,6 +178,9 @@ const emit = defineEmits<{
   upload: [page: Page]
   viewStatus: [page: Page]
 }>()
+
+// Domain management modal state
+const showDomainModal = ref(false)
 
 // Computed properties
 const statusText = computed(() => {
@@ -237,6 +263,19 @@ const handleUpload = () => {
 
 const handleViewStatus = () => {
   emit('viewStatus', props.page)
+}
+
+const handleConfigureDomains = () => {
+  showDomainModal.value = true
+}
+
+const handleDomainModalClose = () => {
+  showDomainModal.value = false
+}
+
+const handleDomainModalRefresh = () => {
+  // Refresh the page data to show updated domains
+  emit('click', props.page)
 }
 
 // Utility functions

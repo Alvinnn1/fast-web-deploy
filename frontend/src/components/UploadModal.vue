@@ -60,6 +60,7 @@
           <p>• 仅支持文件夹</p>
           <p>• 文件大小不能超过10MB</p>
           <p>• 文件夹应包含您的静态网站文件（HTML、CSS、JS等）</p>
+          <p>• 根目录下应至少包含一个index.html文件</p>
           <p>• SPA need a external <a class="text-purple-600 hover:text-purple-800 underline" href="https://developers.cloudflare.com/pages/configuration/redirects/" target="_blank">_redirects</a> file in root directory</p>
         </div>
       </div>
@@ -206,6 +207,17 @@ const triggerFileSelect = () => {
   fileInput.value?.click()
 }
 
+// https://stackoverflow.com/questions/12526676/how-to-encode-a-byte-array-to-a-base64-string-in-javascript
+function _arrayBufferToBase64( buffer: ArrayBuffer ) {
+    var binary = '';
+    var bytes = new Uint8Array( buffer );
+    var len = bytes.byteLength;
+    for (var i = 0; i < len; i++) {
+        binary += String.fromCharCode( bytes[ i ] );
+    }
+    return window.btoa( binary );
+}
+
 const handleFileSelect = (event: Event) => {
   const target = event.target as HTMLInputElement
   const files = Array.from(target.files || []).filter(file => !IGNORE_LIST.some(pattern => minimatch(file.webkitRelativePath, pattern)))
@@ -227,7 +239,7 @@ const handleFileSelect = (event: Event) => {
                   }
                 }
                 const arrayBuffer = e.target.result as ArrayBuffer
-                const base64String = btoa(String.fromCharCode(...new Uint8Array(arrayBuffer)))
+                const base64String = _arrayBufferToBase64(arrayBuffer)
                 const names = file.name.split('.')
                 const extension = names[names.length - 1]
                 const hash = await blake3(base64String + extension)

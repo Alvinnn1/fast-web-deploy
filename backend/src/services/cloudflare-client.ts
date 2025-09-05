@@ -740,6 +740,201 @@ export class CloudflareClient {
       )
     }
   }
+
+  // Domain management methods for Pages projects
+  async getPagesProjectDomains(accountId: string, projectName: string): Promise<any[]> {
+    try {
+      const response: AxiosResponse<CloudflareResponse<any[]>> = await this.client.get(
+        `/accounts/${accountId}/pages/projects/${projectName}/domains`
+      )
+
+      if (response.data.success && response.data.result) {
+        return response.data.result
+      }
+
+      throw new AppError(
+        ErrorType.CLOUDFLARE_API_ERROR,
+        'Failed to retrieve project domains',
+        500,
+        response.data
+      )
+    } catch (error) {
+      if (axios.isAxiosError(error)) {
+        if (error.response) {
+          const status = error.response.status
+          const data = error.response.data
+
+          if (status === 404) {
+            throw new AppError(
+              ErrorType.NOT_FOUND_ERROR,
+              'Project not found',
+              status,
+              data
+            )
+          }
+
+          if (status >= 400 && status < 500) {
+            const errorMessage = data?.errors?.[0]?.message || 'Invalid request to Cloudflare Pages API'
+            throw new AppError(
+              ErrorType.CLOUDFLARE_API_ERROR,
+              errorMessage,
+              status,
+              data
+            )
+          }
+
+          if (status >= 500) {
+            throw new AppError(
+              ErrorType.CLOUDFLARE_API_ERROR,
+              'Cloudflare Pages API server error. Please try again later.',
+              status,
+              data
+            )
+          }
+        } else if (error.request) {
+          throw new AppError(
+            ErrorType.NETWORK_ERROR,
+            'Unable to connect to Cloudflare Pages API. Please check your internet connection.',
+            0,
+            error.message
+          )
+        }
+      }
+
+      throw new AppError(
+        ErrorType.CLOUDFLARE_API_ERROR,
+        'An unexpected error occurred while retrieving project domains.',
+        500,
+        error instanceof Error ? error.message : 'Unknown error'
+      )
+    }
+  }
+
+  async addPagesProjectDomain(accountId: string, projectName: string, domainName: string): Promise<any> {
+    try {
+      const response: AxiosResponse<CloudflareResponse<any>> = await this.client.post(
+        `/accounts/${accountId}/pages/projects/${projectName}/domains`,
+        { name: domainName }
+      )
+
+      if (response.data.success && response.data.result) {
+        return response.data.result
+      }
+
+      throw new AppError(
+        ErrorType.CLOUDFLARE_API_ERROR,
+        'Failed to add domain to project',
+        500,
+        response.data
+      )
+    } catch (error) {
+      if (axios.isAxiosError(error)) {
+        if (error.response) {
+          const status = error.response.status
+          const data = error.response.data
+
+          if (status === 409) {
+            throw new AppError(
+              ErrorType.CONFLICT_ERROR,
+              'Domain already exists for this project',
+              status,
+              data
+            )
+          }
+
+          if (status >= 400 && status < 500) {
+            const errorMessage = data?.errors?.[0]?.message || 'Invalid request to Cloudflare Pages API'
+            throw new AppError(
+              ErrorType.CLOUDFLARE_API_ERROR,
+              errorMessage,
+              status,
+              data
+            )
+          }
+
+          if (status >= 500) {
+            throw new AppError(
+              ErrorType.CLOUDFLARE_API_ERROR,
+              'Cloudflare Pages API server error. Please try again later.',
+              status,
+              data
+            )
+          }
+        } else if (error.request) {
+          throw new AppError(
+            ErrorType.NETWORK_ERROR,
+            'Unable to connect to Cloudflare Pages API. Please check your internet connection.',
+            0,
+            error.message
+          )
+        }
+      }
+
+      throw new AppError(
+        ErrorType.CLOUDFLARE_API_ERROR,
+        'An unexpected error occurred while adding domain to project.',
+        500,
+        error instanceof Error ? error.message : 'Unknown error'
+      )
+    }
+  }
+
+  async deletePagesProjectDomain(accountId: string, projectName: string, domainName: string): Promise<void> {
+    try {
+      await this.client.delete(
+        `/accounts/${accountId}/pages/projects/${projectName}/domains/${domainName}`
+      )
+    } catch (error) {
+      if (axios.isAxiosError(error)) {
+        if (error.response) {
+          const status = error.response.status
+          const data = error.response.data
+
+          if (status === 404) {
+            throw new AppError(
+              ErrorType.NOT_FOUND_ERROR,
+              'Domain not found',
+              status,
+              data
+            )
+          }
+
+          if (status >= 400 && status < 500) {
+            const errorMessage = data?.errors?.[0]?.message || 'Invalid request to Cloudflare Pages API'
+            throw new AppError(
+              ErrorType.CLOUDFLARE_API_ERROR,
+              errorMessage,
+              status,
+              data
+            )
+          }
+
+          if (status >= 500) {
+            throw new AppError(
+              ErrorType.CLOUDFLARE_API_ERROR,
+              'Cloudflare Pages API server error. Please try again later.',
+              status,
+              data
+            )
+          }
+        } else if (error.request) {
+          throw new AppError(
+            ErrorType.NETWORK_ERROR,
+            'Unable to connect to Cloudflare Pages API. Please check your internet connection.',
+            0,
+            error.message
+          )
+        }
+      }
+
+      throw new AppError(
+        ErrorType.CLOUDFLARE_API_ERROR,
+        'An unexpected error occurred while deleting domain from project.',
+        500,
+        error instanceof Error ? error.message : 'Unknown error'
+      )
+    }
+  }
 }
 
 // Export singleton instance

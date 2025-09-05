@@ -12,7 +12,7 @@ export type DeploymentStatus = 'queued' | 'building' | 'deploying' | 'success' |
 export interface Page {
   id: string;
   name: string;
-  project_name: string; // Cloudflare project name for API calls
+  project_name?: string; // Cloudflare project name for API calls
   status: PageStatus;
   url?: string;
   domains?: string[];
@@ -110,8 +110,8 @@ export interface DeploymentProgress {
   message?: string;
 }
 
-export interface UploadPayload   {
-  base64: boolean;  
+export interface UploadPayload {
+  base64: boolean;
   key: string;
   metadata: { contentType: string };
   value: string;
