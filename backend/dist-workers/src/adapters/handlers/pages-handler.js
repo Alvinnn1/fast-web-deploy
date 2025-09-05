@@ -143,6 +143,19 @@ export class PagesHandler {
             if (pathParts.length === 4 && pathParts[1] === 'pages' && pathParts[2] === 'assets' && pathParts[3] === 'upload' && method === 'POST') {
                 return this.uploadAssets(request);
             }
+            if (pathParts.length === 4 && pathParts[1] === 'pages' && pathParts[3] === 'domains' && method === 'GET') {
+                const projectName = pathParts[2];
+                return this.getProjectDomains(projectName);
+            }
+            if (pathParts.length === 4 && pathParts[1] === 'pages' && pathParts[3] === 'domains' && method === 'POST') {
+                const projectName = pathParts[2];
+                return this.addProjectDomain(request, projectName);
+            }
+            if (pathParts.length === 5 && pathParts[1] === 'pages' && pathParts[3] === 'domains' && method === 'DELETE') {
+                const projectName = pathParts[2];
+                const domainName = pathParts[4];
+                return this.deleteProjectDomain(projectName, domainName);
+            }
             return WorkersResponseFormatter.notFound('Pages endpoint not found');
         }
         catch (error) {
@@ -302,5 +315,42 @@ export class PagesHandler {
         }
         const result = await this.cloudflareClient.uploadAssets(jwt.trim(), payload);
         return WorkersResponseFormatter.success(result, 'Assets uploaded successfully');
+    }
+    async getProjectDomains(projectName) {
+        if (!projectName || typeof projectName !== 'string') {
+            throw WorkersErrorHandler.createValidationError('Page project name is required');
+        }
+        const accountId = this.cloudflareClient.getConfiguredAccountId();
+        const domains = await this.cloudflareClient.getPagesProjectDomains(accountId, projectName);
+        return WorkersResponseFormatter.success(domains, 'Project domains retrieved successfully');
+    }
+    async addProjectDomain(request, projectName) {
+        if (!projectName || typeof projectName !== 'string') {
+            throw WorkersErrorHandler.createValidationError('Page project name is required');
+        }
+        const body = await request.json();
+        const { name } = body;
+        if (!name || typeof name !== 'string' || name.trim().length === 0) {
+            throw WorkersErrorHandler.createValidationError('Domain name is required');
+        }
+        const domainRegex = /^[a-zA-Z0-9]([a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(\.[a-zA-Z0-9]([a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*$/;
+        const trimmedName = name.trim().toLowerCase();
+        if (!domainRegex.test(trimmedName)) {
+            throw WorkersErrorHandler.createValidationError('Invalid domain name format');
+        }
+        const accountId = this.cloudflareClient.getConfiguredAccountId();
+        const domain = await this.cloudflareClient.addPagesProjectDomain(accountId, projectName, trimmedName);
+        return WorkersResponseFormatter.success(domain, 'Domain added to project successfully');
+    }
+    async deleteProjectDomain(projectName, domainName) {
+        if (!projectName || typeof projectName !== 'string') {
+            throw WorkersErrorHandler.createValidationError('Page project name is required');
+        }
+        if (!domainName || typeof domainName !== 'string') {
+            throw WorkersErrorHandler.createValidationError('Domain name is required');
+        }
+        const accountId = this.cloudflareClient.getConfiguredAccountId();
+        await this.cloudflareClient.deletePagesProjectDomain(accountId, projectName, domainName);
+        return WorkersResponseFormatter.success(null, 'Domain deleted from project successfully');
     }
 }

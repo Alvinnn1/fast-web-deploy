@@ -243,6 +243,20 @@ export class WorkersCloudflareClient {
     return this.makeRequest<any[]>('GET', `/accounts/${accountId}/pages/projects/${projectName}/deployments`)
   }
 
+  // Pages Project Domain Management Methods
+  async getPagesProjectDomains(accountId: string, projectName: string): Promise<any[]> {
+    return this.makeRequest<any[]>('GET', `/accounts/${accountId}/pages/projects/${projectName}/domains`)
+  }
+
+  async addPagesProjectDomain(accountId: string, projectName: string, domainName: string): Promise<any> {
+    const data = { name: domainName }
+    return this.makeRequest<any>('POST', `/accounts/${accountId}/pages/projects/${projectName}/domains`, data)
+  }
+
+  async deletePagesProjectDomain(accountId: string, projectName: string, domainName: string): Promise<void> {
+    await this.makeRequest<void>('DELETE', `/accounts/${accountId}/pages/projects/${projectName}/domains/${domainName}`)
+  }
+
   // Account Information Methods
   async getAccountId(): Promise<string> {
     if (this.env.CLOUDFLARE_ACCOUNT_ID) {

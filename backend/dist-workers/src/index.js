@@ -14,6 +14,7 @@ import { dirname, join } from 'path';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 const fastify = Fastify({
+    bodyLimit: config.maxFileSize || 10 * 1024 * 1024,
     logger: {
         level: config.logLevel || 'info'
     }

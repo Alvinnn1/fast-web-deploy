@@ -299,4 +299,58 @@ export async function pagesRoutes(fastify) {
             return ErrorHandler.handleRouteError(reply, error);
         }
     });
+    fastify.get('/api/pages/:projectName/domains', async (request, reply) => {
+        try {
+            const { projectName } = request.params;
+            if (!projectName || typeof projectName !== 'string') {
+                throw ErrorHandler.createValidationError('Page project name is required');
+            }
+            const accountId = cloudflareClient.getConfiguredAccountId();
+            const domains = await cloudflareClient.getPagesProjectDomains(accountId, projectName);
+            return ResponseFormatter.success(domains, 'Project domains retrieved successfully');
+        }
+        catch (error) {
+            return ErrorHandler.handleRouteError(reply, error);
+        }
+    });
+    fastify.post('/api/pages/:projectName/domains', async (request, reply) => {
+        try {
+            const { projectName } = request.params;
+            const { name } = request.body;
+            if (!projectName || typeof projectName !== 'string') {
+                throw ErrorHandler.createValidationError('Page project name is required');
+            }
+            if (!name || typeof name !== 'string' || name.trim().length === 0) {
+                throw ErrorHandler.createValidationError('Domain name is required');
+            }
+            const domainRegex = /^[a-zA-Z0-9]([a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(\.[a-zA-Z0-9]([a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*$/;
+            const trimmedName = name.trim().toLowerCase();
+            if (!domainRegex.test(trimmedName)) {
+                throw ErrorHandler.createValidationError('Invalid domain name format');
+            }
+            const accountId = cloudflareClient.getConfiguredAccountId();
+            const domain = await cloudflareClient.addPagesProjectDomain(accountId, projectName, trimmedName);
+            return ResponseFormatter.success(domain, 'Domain added to project successfully');
+        }
+        catch (error) {
+            return ErrorHandler.handleRouteError(reply, error);
+        }
+    });
+    fastify.delete('/api/pages/:projectName/domains/:domainName', async (request, reply) => {
+        try {
+            const { projectName, domainName } = request.params;
+            if (!projectName || typeof projectName !== 'string') {
+                throw ErrorHandler.createValidationError('Page project name is required');
+            }
+            if (!domainName || typeof domainName !== 'string') {
+                throw ErrorHandler.createValidationError('Domain name is required');
+            }
+            const accountId = cloudflareClient.getConfiguredAccountId();
+            await cloudflareClient.deletePagesProjectDomain(accountId, projectName, domainName);
+            return ResponseFormatter.success(null, 'Domain deleted from project successfully');
+        }
+        catch (error) {
+            return ErrorHandler.handleRouteError(reply, error);
+        }
+    });
 }

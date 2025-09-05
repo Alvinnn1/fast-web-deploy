@@ -93,14 +93,66 @@ export class CloudflareClient {
     async deleteDNSRecord(zoneId, recordId) {
         return this.makeRequest('DELETE', `/zones/${zoneId}/dns_records/${recordId}`);
     }
-    async getSSLCertificate(zoneId) {
+    async getSSLCertificates(zoneId) {
         return this.makeRequest('GET', `/zones/${zoneId}/ssl/certificate_packs`);
     }
+    async getSSLCertificate(zoneId) {
+        try {
+            const certificatePacks = await this.getSSLCertificates(zoneId);
+            if (!certificatePacks || certificatePacks.length === 0) {
+                return null;
+            }
+            const activePack = certificatePacks.find(pack => pack.status === 'active');
+            if (!activePack) {
+                return null;
+            }
+            const primaryCert = activePack.certificates?.find((cert) => cert.id === activePack.primary_certificate) || activePack.certificates?.[0];
+            if (!primaryCert) {
+                return null;
+            }
+            return {
+                id: primaryCert.id,
+                status: primaryCert.status,
+                issuer: primaryCert.issuer || activePack.certificate_authority || 'Unknown',
+                expires_on: primaryCert.expires_on,
+                hosts: activePack.hosts || [],
+                type: activePack.type || 'universal',
+                validation_method: activePack.validation_method || 'txt',
+                validity_days: activePack.validity_days || 90
+            };
+        }
+        catch (error) {
+            return null;
+        }
+    }
     async requestSSLCertificate(zoneId) {
-        return this.makeRequest('POST', `/zones/${zoneId}/ssl/certificate_packs`, {
-            type: 'advanced',
-            hosts: ['*']
-        });
+        try {
+            const existingCert = await this.getSSLCertificate(zoneId);
+            if (existingCert && existingCert.status === 'active') {
+                return existingCert;
+            }
+            const result = await this.makeRequest('POST', `/zones/${zoneId}/ssl/certificate_packs`, {
+                type: 'universal',
+                hosts: []
+            });
+            return {
+                id: result.id || result.certificates?.[0]?.id || 'pending',
+                status: result.status || 'pending',
+                issuer: result.certificate_authority || 'Cloudflare',
+                expires_on: result.certificates?.[0]?.expires_on || new Date(Date.now() + 90 * 24 * 60 * 60 * 1000).toISOString(),
+                hosts: result.hosts || [],
+                type: result.type || 'universal',
+                validation_method: result.validation_method || 'txt',
+                validity_days: result.validity_days || 90
+            };
+        }
+        catch (error) {
+            const existingCert = await this.getSSLCertificate(zoneId);
+            if (existingCert) {
+                return existingCert;
+            }
+            throw error;
+        }
     }
     async getPagesProjects(accountId) {
         const endpoint = accountId ? `/accounts/${accountId}/pages/projects` : '/accounts/pages/projects';
@@ -274,6 +326,95 @@ export class CloudflareClient {
                 }
             }
             throw new AppError(ErrorType.CLOUDFLARE_API_ERROR, 'An unexpected error occurred while uploading assets.', 500, error instanceof Error ? error.message : 'Unknown error');
+        }
+    }
+    async getPagesProjectDomains(accountId, projectName) {
+        try {
+            const response = await this.client.get(`/accounts/${accountId}/pages/projects/${projectName}/domains`);
+            if (response.data.success && response.data.result) {
+                return response.data.result;
+            }
+            throw new AppError(ErrorType.CLOUDFLARE_API_ERROR, 'Failed to retrieve project domains', 500, response.data);
+        }
+        catch (error) {
+            if (axios.isAxiosError(error)) {
+                if (error.response) {
+                    const status = error.response.status;
+                    const data = error.response.data;
+                    if (status === 404) {
+                        throw new AppError(ErrorType.NOT_FOUND_ERROR, 'Project not found', status, data);
+                    }
+                    if (status >= 400 && status < 500) {
+                        const errorMessage = data?.errors?.[0]?.message || 'Invalid request to Cloudflare Pages API';
+                        throw new AppError(ErrorType.CLOUDFLARE_API_ERROR, errorMessage, status, data);
+                    }
+                    if (status >= 500) {
+                        throw new AppError(ErrorType.CLOUDFLARE_API_ERROR, 'Cloudflare Pages API server error. Please try again later.', status, data);
+                    }
+                }
+                else if (error.request) {
+                    throw new AppError(ErrorType.NETWORK_ERROR, 'Unable to connect to Cloudflare Pages API. Please check your internet connection.', 0, error.message);
+                }
+            }
+            throw new AppError(ErrorType.CLOUDFLARE_API_ERROR, 'An unexpected error occurred while retrieving project domains.', 500, error instanceof Error ? error.message : 'Unknown error');
+        }
+    }
+    async addPagesProjectDomain(accountId, projectName, domainName) {
+        try {
+            const response = await this.client.post(`/accounts/${accountId}/pages/projects/${projectName}/domains`, { name: domainName });
+            if (response.data.success && response.data.result) {
+                return response.data.result;
+            }
+            throw new AppError(ErrorType.CLOUDFLARE_API_ERROR, 'Failed to add domain to project', 500, response.data);
+        }
+        catch (error) {
+            if (axios.isAxiosError(error)) {
+                if (error.response) {
+                    const status = error.response.status;
+                    const data = error.response.data;
+                    if (status === 409) {
+                        throw new AppError(ErrorType.CONFLICT_ERROR, 'Domain already exists for this project', status, data);
+                    }
+                    if (status >= 400 && status < 500) {
+                        const errorMessage = data?.errors?.[0]?.message || 'Invalid request to Cloudflare Pages API';
+                        throw new AppError(ErrorType.CLOUDFLARE_API_ERROR, errorMessage, status, data);
+                    }
+                    if (status >= 500) {
+                        throw new AppError(ErrorType.CLOUDFLARE_API_ERROR, 'Cloudflare Pages API server error. Please try again later.', status, data);
+                    }
+                }
+                else if (error.request) {
+                    throw new AppError(ErrorType.NETWORK_ERROR, 'Unable to connect to Cloudflare Pages API. Please check your internet connection.', 0, error.message);
+                }
+            }
+            throw new AppError(ErrorType.CLOUDFLARE_API_ERROR, 'An unexpected error occurred while adding domain to project.', 500, error instanceof Error ? error.message : 'Unknown error');
+        }
+    }
+    async deletePagesProjectDomain(accountId, projectName, domainName) {
+        try {
+            await this.client.delete(`/accounts/${accountId}/pages/projects/${projectName}/domains/${domainName}`);
+        }
+        catch (error) {
+            if (axios.isAxiosError(error)) {
+                if (error.response) {
+                    const status = error.response.status;
+                    const data = error.response.data;
+                    if (status === 404) {
+                        throw new AppError(ErrorType.NOT_FOUND_ERROR, 'Domain not found', status, data);
+                    }
+                    if (status >= 400 && status < 500) {
+                        const errorMessage = data?.errors?.[0]?.message || 'Invalid request to Cloudflare Pages API';
+                        throw new AppError(ErrorType.CLOUDFLARE_API_ERROR, errorMessage, status, data);
+                    }
+                    if (status >= 500) {
+                        throw new AppError(ErrorType.CLOUDFLARE_API_ERROR, 'Cloudflare Pages API server error. Please try again later.', status, data);
+                    }
+                }
+                else if (error.request) {
+                    throw new AppError(ErrorType.NETWORK_ERROR, 'Unable to connect to Cloudflare Pages API. Please check your internet connection.', 0, error.message);
+                }
+            }
+            throw new AppError(ErrorType.CLOUDFLARE_API_ERROR, 'An unexpected error occurred while deleting domain from project.', 500, error instanceof Error ? error.message : 'Unknown error');
         }
     }
 }

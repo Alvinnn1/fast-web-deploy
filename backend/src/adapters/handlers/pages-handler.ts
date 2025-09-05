@@ -182,6 +182,25 @@ export class PagesHandler {
         return this.uploadAssets(request)
       }
 
+      // GET /api/pages/:projectName/domains - Get project domains
+      if (pathParts.length === 4 && pathParts[1] === 'pages' && pathParts[3] === 'domains' && method === 'GET') {
+        const projectName = pathParts[2]!
+        return this.getProjectDomains(projectName)
+      }
+
+      // POST /api/pages/:projectName/domains - Add domain to project
+      if (pathParts.length === 4 && pathParts[1] === 'pages' && pathParts[3] === 'domains' && method === 'POST') {
+        const projectName = pathParts[2]!
+        return this.addProjectDomain(request, projectName)
+      }
+
+      // DELETE /api/pages/:projectName/domains/:domainName - Delete domain from project
+      if (pathParts.length === 5 && pathParts[1] === 'pages' && pathParts[3] === 'domains' && method === 'DELETE') {
+        const projectName = pathParts[2]!
+        const domainName = pathParts[4]!
+        return this.deleteProjectDomain(projectName, domainName)
+      }
+
       return WorkersResponseFormatter.notFound('Pages endpoint not found')
     } catch (error) {
       return WorkersErrorHandler.createErrorResponse(error)
@@ -428,6 +447,76 @@ export class PagesHandler {
     return WorkersResponseFormatter.success(
       result,
       'Assets uploaded successfully'
+    )
+  }
+
+  private async getProjectDomains(projectName: string): Promise<Response> {
+    if (!projectName || typeof projectName !== 'string') {
+      throw WorkersErrorHandler.createValidationError('Page project name is required')
+    }
+
+    // Use configured account ID
+    const accountId = this.cloudflareClient.getConfiguredAccountId()
+
+    // Get project domains
+    const domains = await this.cloudflareClient.getPagesProjectDomains(accountId, projectName)
+
+    return WorkersResponseFormatter.success(
+      domains,
+      'Project domains retrieved successfully'
+    )
+  }
+
+  private async addProjectDomain(request: Request, projectName: string): Promise<Response> {
+    if (!projectName || typeof projectName !== 'string') {
+      throw WorkersErrorHandler.createValidationError('Page project name is required')
+    }
+
+    const body = await request.json() as { name: string }
+    const { name } = body
+
+    if (!name || typeof name !== 'string' || name.trim().length === 0) {
+      throw WorkersErrorHandler.createValidationError('Domain name is required')
+    }
+
+    // Validate domain name format
+    const domainRegex = /^[a-zA-Z0-9]([a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(\.[a-zA-Z0-9]([a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*$/
+    const trimmedName = name.trim().toLowerCase()
+
+    if (!domainRegex.test(trimmedName)) {
+      throw WorkersErrorHandler.createValidationError('Invalid domain name format')
+    }
+
+    // Use configured account ID
+    const accountId = this.cloudflareClient.getConfiguredAccountId()
+
+    // Add domain to project
+    const domain = await this.cloudflareClient.addPagesProjectDomain(accountId, projectName, trimmedName)
+
+    return WorkersResponseFormatter.success(
+      domain,
+      'Domain added to project successfully'
+    )
+  }
+
+  private async deleteProjectDomain(projectName: string, domainName: string): Promise<Response> {
+    if (!projectName || typeof projectName !== 'string') {
+      throw WorkersErrorHandler.createValidationError('Page project name is required')
+    }
+
+    if (!domainName || typeof domainName !== 'string') {
+      throw WorkersErrorHandler.createValidationError('Domain name is required')
+    }
+
+    // Use configured account ID
+    const accountId = this.cloudflareClient.getConfiguredAccountId()
+
+    // Delete domain from project
+    await this.cloudflareClient.deletePagesProjectDomain(accountId, projectName, domainName)
+
+    return WorkersResponseFormatter.success(
+      null,
+      'Domain deleted from project successfully'
     )
   }
 }

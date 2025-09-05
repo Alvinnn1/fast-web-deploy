@@ -67,9 +67,6 @@ export class WorkersConfigManager {
         if (!this.config.cloudflareAccountId) {
             errors.push('CLOUDFLARE_ACCOUNT_ID is required');
         }
-        if (!this.config.cloudflareEmail) {
-            errors.push('CLOUDFLARE_EMAIL is required');
-        }
         if (this.config.corsOrigins.length === 0) {
             errors.push('At least one CORS origin must be specified');
         }

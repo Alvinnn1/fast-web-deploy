@@ -136,6 +136,16 @@ export class WorkersCloudflareClient {
     async getPagesDeployments(accountId, projectName) {
         return this.makeRequest('GET', `/accounts/${accountId}/pages/projects/${projectName}/deployments`);
     }
+    async getPagesProjectDomains(accountId, projectName) {
+        return this.makeRequest('GET', `/accounts/${accountId}/pages/projects/${projectName}/domains`);
+    }
+    async addPagesProjectDomain(accountId, projectName, domainName) {
+        const data = { name: domainName };
+        return this.makeRequest('POST', `/accounts/${accountId}/pages/projects/${projectName}/domains`, data);
+    }
+    async deletePagesProjectDomain(accountId, projectName, domainName) {
+        await this.makeRequest('DELETE', `/accounts/${accountId}/pages/projects/${projectName}/domains/${domainName}`);
+    }
     async getAccountId() {
         if (this.env.CLOUDFLARE_ACCOUNT_ID) {
             return this.env.CLOUDFLARE_ACCOUNT_ID;

@@ -21,11 +21,22 @@ function transformDNSRecord(record) {
     };
 }
 function transformSSLCertificate(cert) {
+    let status = 'pending';
+    if (cert.status === 'active') {
+        status = 'active';
+    }
+    else if (cert.status === 'expired' || (cert.expires_on && new Date(cert.expires_on) < new Date())) {
+        status = 'expired';
+    }
     return {
         id: cert.id,
-        status: cert.status,
+        status,
         issuer: cert.issuer || 'Cloudflare',
-        expiresAt: cert.expires_on
+        expiresAt: cert.expires_on,
+        hosts: cert.hosts || [],
+        type: cert.type || 'universal',
+        validationMethod: cert.validation_method || 'txt',
+        validityDays: cert.validity_days || 90
     };
 }
 export async function domainsRoutes(fastify) {
@@ -135,11 +146,10 @@ export async function domainsRoutes(fastify) {
                 type: type.toUpperCase(),
                 name: name.trim(),
                 content: content.trim(),
-                ttl: ttl || 1
+                ttl: ttl || 1,
+                proxied: proxied || false
             };
-            if (proxied !== undefined && ['A', 'AAAA'].includes(type.toUpperCase())) {
-                recordData.proxied = proxied;
-            }
+            console.log(recordData);
             const createdRecord = await cloudflareClient.createDNSRecord(id, recordData);
             const transformedRecord = transformDNSRecord(createdRecord);
             return ResponseFormatter.success(transformedRecord, 'DNS record created successfully');
