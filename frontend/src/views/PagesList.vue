@@ -83,6 +83,11 @@ import { usePagesPagination } from '@/composables/usePagination'
 import { useTabState } from '@/composables/useTabState'
 import type { Page, DeploymentStatusDetail } from '@/types'
 
+// Define component name for keep-alive
+defineOptions({
+  name: 'PagesList'
+})
+
 // Use paginated data management
 const { data: pages, loading, error, pagination, fetchData, goToPage, refresh } = usePagesPagination()
 const { markTabInitialized, isTabInitialized } = useTabState()
@@ -188,8 +193,8 @@ const loadPagesFromCache = async () => {
 
 // Load pages on component mount (first time)
 onMounted(() => {
-  // Only load if not already initialized
-  if (!isTabInitialized('pages')) {
+  // Only load if not already initialized or no data
+  if (!isTabInitialized('pages') || pages.value.length === 0) {
     loadPagesFromCache()
   }
 })
@@ -202,11 +207,25 @@ onActivated(() => {
   }
 })
 
+// Handle adding new page to cache
+const onAddPage = (page: Page) => {
+  // Refresh the list to include the new page
+  refresh()
+}
+
+// Handle updating page in cache
+const onUpdatePage = (pageId: string, updates: Partial<Page>) => {
+  // Refresh the list to show updates
+  refresh()
+}
+
 // Expose methods for parent component
 defineExpose({
   refresh: refreshPages,
   fetchData,
   handleStatusUpdate,
-  refreshPageData
+  refreshPageData,
+  onAddPage,
+  onUpdatePage
 })
 </script>

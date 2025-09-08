@@ -167,6 +167,11 @@ import { useNotifications } from '@/utils/notifications'
 import { ErrorHandler } from '@/utils/loading'
 import type { DomainDetail, DNSRecord, DomainStatus, SSLCertificate, CreateDNSRecordRequest } from '@/types'
 
+// Define component name for keep-alive
+defineOptions({
+  name: 'DomainDetail'
+})
+
 interface Props {
   domainId: string
 }

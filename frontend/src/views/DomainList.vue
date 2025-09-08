@@ -81,6 +81,11 @@ import DomainItem from '@/components/DomainItem.vue'
 import { useDomainsPagination } from '@/composables/usePagination'
 import type { Domain } from '@/types'
 
+// Define component name for keep-alive
+defineOptions({
+  name: 'DomainList'
+})
+
 // Use paginated data management
 const { data: domains, loading, error, pagination, fetchData, goToPage, refresh } = useDomainsPagination()
 
@@ -117,7 +122,10 @@ const fetchDomains = () => {
 
 // Load domains on component mount (first time)
 onMounted(() => {
-  fetchDomains()
+  // Only fetch if we don't have data yet
+  if (domains.value.length === 0) {
+    fetchDomains()
+  }
 })
 
 // Load domains when component is activated (keepAlive)
@@ -128,9 +136,16 @@ onActivated(() => {
   }
 })
 
+// Handle adding new domain to cache
+const onAddDomain = (domain: Domain) => {
+  // Refresh the list to include the new domain
+  refresh()
+}
+
 // Expose methods for parent component
 defineExpose({
   refresh: refreshDomains,
-  fetchData
+  fetchData,
+  onAddDomain
 })
 </script>

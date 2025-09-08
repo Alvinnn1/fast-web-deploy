@@ -8,22 +8,24 @@
 
     <!-- Main Content -->
     <main class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-      <div class="bg-white rounded-lg shadow-lg border border-gray-200 animate-slide-up">
-        <!-- Domain Content -->
-        <div v-if="activeTab === 'domains'" class="p-6">
-          <!-- Domain List -->
-          <DomainList v-if="!selectedDomainId" ref="domainListRef" @add-domain="handleAddDomain"
-            @domain-click="handleDomainClick" />
+      <div class="bg-white rounded-lg shadow-lg border border-gray-200 animate-slide-up p-6">
+        <keep-alive :include="['DomainList', 'PagesList', 'DomainDetail']">
+          <div>
+            <!-- Domain Content -->
+            <div v-show="activeTab === 'domains'">
+              <!-- Domain List -->
+              <DomainList v-if="!selectedDomainId" ref="domainListRef" @add-domain="handleAddDomain"
+                @domain-click="handleDomainClick" />
 
-          <!-- Domain Detail -->
-          <DomainDetail v-else :domain-id="selectedDomainId" @back="handleBackToDomainList" />
-        </div>
+              <!-- Domain Detail -->
+              <DomainDetail v-else :domain-id="selectedDomainId" @back="handleBackToDomainList" />
+            </div>
 
-        <!-- Pages List Content -->
-        <div v-if="activeTab === 'pages'" class="p-6">
-          <PagesList ref="pagesListRef" @add-page="handleAddPage" @page-click="handlePageClick"
-            @page-upload="handlePageUpload" @view-status="handleViewStatus" />
-        </div>
+            <!-- Pages List Content -->
+            <PagesList v-show="activeTab === 'pages'" ref="pagesListRef" @add-page="handleAddPage" @page-click="handlePageClick"
+              @page-upload="handlePageUpload" @view-status="handleViewStatus" />
+          </div>
+        </keep-alive>
       </div>
     </main>
 
@@ -45,7 +47,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue'
+import { ref, computed } from 'vue'
 import Header from './Header.vue'
 import TabNavigation from './TabNavigation.vue'
 import DomainList from '@/views/DomainList.vue'
@@ -68,6 +70,7 @@ const pagesListRef = ref<InstanceType<typeof PagesList> | null>(null)
 const selectedDomainId = ref<string | null>(null)
 const selectedPageForUpload = ref<Page | undefined>(undefined)
 const selectedPageForStatus = ref<Page | undefined>(undefined)
+
 
 const handleTabChange = (tabId: string) => {
   setActiveTab(tabId)
@@ -99,8 +102,8 @@ const handleAddDomainSuccess = (domain: Domain) => {
   // showAddDomainModal.value = false
 
   // Add to cache instead of refreshing
-  if (domainListRef.value && domainListRef.value.addDomain) {
-    domainListRef.value.addDomain(domain)
+  if (domainListRef.value && domainListRef.value.onAddDomain) {
+    domainListRef.value.onAddDomain(domain)
   }
 }
 
@@ -128,8 +131,8 @@ const handleAddPageSuccess = (page: Page) => {
   showAddPageModal.value = false
 
   // Add to cache instead of refreshing
-  if (pagesListRef.value && pagesListRef.value.addPage) {
-    pagesListRef.value.addPage(page)
+  if (pagesListRef.value && pagesListRef.value.onAddPage) {
+    pagesListRef.value.onAddPage(page)
   }
 }
 
@@ -143,8 +146,8 @@ const handleUploadSuccess = (result: any) => {
   showUploadModal.value = false
 
   // Update the specific page in cache instead of refreshing all
-  if (selectedPageForUpload.value && pagesListRef.value && pagesListRef.value.updatePage) {
-    pagesListRef.value.updatePage(selectedPageForUpload.value.id, {
+  if (selectedPageForUpload.value && pagesListRef.value && pagesListRef.value.onUpdatePage) {
+    pagesListRef.value.onUpdatePage(selectedPageForUpload.value.id, {
       status: 'deploying',
       deploymentId: result.id,
       lastDeployedAt: new Date().toISOString()

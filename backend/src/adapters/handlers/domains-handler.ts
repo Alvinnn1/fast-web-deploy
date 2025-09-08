@@ -34,13 +34,12 @@ function transformDNSRecord(record: any): DNSRecord {
 
 // Transform Cloudflare SSL certificate to our SSLCertificate interface
 function transformSSLCertificate(cert: any): SSLCertificate {
-  console.log('Transforming certificate:', cert)
 
   return {
     id: cert.id,
     status: cert.status,
     issuer: cert.certificate_authority || cert.issuer || 'Cloudflare',
-    expiresAt: cert.expires_on || cert.expiresAt || new Date(Date.now() + 90 * 24 * 60 * 60 * 1000).toISOString(),
+    expiresAt: cert.certificates && cert.certificates.length > 0 ? cert.certificates[0].expires_on : '',
     hosts: cert.hosts || [],
     type: cert.type,
     validationMethod: cert.validation_method,
@@ -187,7 +186,6 @@ export class DomainsHandler {
     try {
       const cert = await this.cloudflareClient.getSSLCertificate(domainId)
       sslCertificate = transformSSLCertificate(cert)
-      console.log('sslCertificate', sslCertificate)
     } catch (error) {
       // SSL certificate may not exist, that's okay
       sslCertificate = undefined
@@ -342,16 +340,11 @@ export class DomainsHandler {
     try {
       const certificatesResponse = await this.cloudflareClient.getSSLCertificate(domainId)
 
-      console.log('domainId', domainId)
-      console.log('certificatesResponse', certificatesResponse)
-
       // The makeRequest method already extracts the 'result' from Cloudflare response
       // So certificatesResponse should be the array of certificates directly
       const certificates = Array.isArray(certificatesResponse) ? certificatesResponse : []
 
-      console.log('certificates to transform:', certificates)
       const transformedCertificates = certificates.map(transformSSLCertificate)
-      console.log('transformedCertificates:', transformedCertificates)
 
       return WorkersResponseFormatter.success(
         transformedCertificates,
