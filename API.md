@@ -5,7 +5,7 @@ This document provides comprehensive documentation for the Cloudflare Static Dep
 ## Base URL
 
 - **Development**: `http://localhost:3000`
-- **Production**: `https://your-domain.com`
+- **Production**: `https://api.luckyjingwen.top`
 
 ## Authentication
 
@@ -46,19 +46,32 @@ interface ApiResponse<T = any> {
   "success": false,
   "message": "Domain not found",
   "error": {
-    "code": "DOMAIN_NOT_FOUND",
+    "code": "NOT_FOUND",
     "details": {
-      "domainId": "invalid123"
+      "domainId": "invalid-id"
     }
   }
 }
 ```
 
-## Health Check
+## Rate Limiting
 
-### GET /health
+The API implements rate limiting with the following limits:
 
-Check if the API server is running and healthy.
+- **General endpoints**: 1000 requests per 15 minutes
+- **Sensitive endpoints** (`/api/domains`, `/api/pages`): 100 requests per minute
+
+Rate limit headers are included in responses:
+- `X-RateLimit-Limit`: Maximum requests allowed
+- `X-RateLimit-Remaining`: Remaining requests
+- `X-RateLimit-Reset`: Reset time (Unix timestamp)
+
+## Endpoints
+
+### Health Check
+
+#### GET /health
+Check API health status.
 
 **Response:**
 ```json
@@ -66,17 +79,34 @@ Check if the API server is running and healthy.
   "success": true,
   "data": {
     "status": "ok",
-    "timestamp": "2024-01-01T00:00:00.000Z"
+    "timestamp": "2024-01-01T00:00:00.000Z",
+    "environment": "production",
+    "version": "1.0.0"
   },
-  "message": "Server is healthy"
+  "message": "Service is healthy"
 }
 ```
 
-## Domain Management
+### API Test
 
-### GET /api/domains
+#### GET /api/test
+Test API connectivity.
 
-Retrieve all domains from your Cloudflare account.
+**Response:**
+```json
+{
+  "success": true,
+  "data": {
+    "message": "Backend API is working!"
+  },
+  "message": "API test successful"
+}
+```
+
+### Domain Management
+
+#### GET /api/domains
+Get all domains.
 
 **Response:**
 ```json
@@ -96,25 +126,16 @@ Retrieve all domains from your Cloudflare account.
 }
 ```
 
-**Status Codes:**
-- `200` - Success
-- `500` - Server error or Cloudflare API error
-
-### POST /api/domains
-
-Add a new domain to your Cloudflare account.
+#### POST /api/domains
+Create a new domain.
 
 **Request Body:**
 ```json
 {
   "name": "example.com",
-  "nameservers": ["ns1.cloudflare.com", "ns2.cloudflare.com"]
+  "nameservers": ["ns1.example.com", "ns2.example.com"]
 }
 ```
-
-**Parameters:**
-- `name` (string, required) - The domain name to add
-- `nameservers` (string[], optional) - Custom nameservers for the domain
 
 **Response:**
 ```json
@@ -124,41 +145,16 @@ Add a new domain to your Cloudflare account.
     "id": "zone123",
     "name": "example.com",
     "status": "pending",
-    "nameservers": ["ns1.cloudflare.com", "ns2.cloudflare.com"],
+    "nameservers": ["ns1.example.com", "ns2.example.com"],
     "createdAt": "2024-01-01T00:00:00.000Z",
     "modifiedAt": "2024-01-01T00:00:00.000Z"
   },
-  "message": "Domain added successfully"
+  "message": "Domain created successfully"
 }
 ```
 
-**Status Codes:**
-- `201` - Domain created successfully
-- `400` - Invalid request data
-- `409` - Domain already exists
-- `500` - Server error
-
-**Error Examples:**
-```json
-{
-  "success": false,
-  "message": "Invalid domain name format",
-  "error": {
-    "code": "VALIDATION_ERROR",
-    "details": {
-      "field": "name",
-      "value": "invalid-domain"
-    }
-  }
-}
-```
-
-### GET /api/domains/:id
-
-Get detailed information about a specific domain.
-
-**Parameters:**
-- `id` (string) - The Cloudflare zone ID
+#### GET /api/domains/{domainId}
+Get domain details including DNS records and SSL certificate.
 
 **Response:**
 ```json
@@ -184,25 +180,16 @@ Get detailed information about a specific domain.
     "sslCertificate": {
       "id": "cert123",
       "status": "active",
-      "issuer": "Let's Encrypt",
-      "expiresAt": "2024-12-31T23:59:59.000Z"
+      "issuer": "Cloudflare",
+      "expiresAt": "2025-01-01T00:00:00.000Z"
     }
   },
   "message": "Domain details retrieved successfully"
 }
 ```
 
-**Status Codes:**
-- `200` - Success
-- `404` - Domain not found
-- `500` - Server error
-
-### GET /api/domains/:id/dns-records
-
-Get all DNS records for a specific domain.
-
-**Parameters:**
-- `id` (string) - The Cloudflare zone ID
+#### GET /api/domains/{domainId}/dns-records
+Get DNS records for a domain.
 
 **Response:**
 ```json
@@ -216,97 +203,21 @@ Get all DNS records for a specific domain.
       "content": "192.0.2.1",
       "ttl": 300,
       "proxied": true
-    },
-    {
-      "id": "record124",
-      "type": "CNAME",
-      "name": "www.example.com",
-      "content": "example.com",
-      "ttl": 300,
-      "proxied": true
     }
   ],
   "message": "DNS records retrieved successfully"
 }
 ```
 
-### POST /api/domains/:id/dns-records
-
-Create a new DNS record for a specific domain.
-
-**Parameters:**
-- `id` (string) - The Cloudflare zone ID
+#### POST /api/domains/{domainId}/dns-records
+Create a new DNS record.
 
 **Request Body:**
 ```json
 {
   "type": "A",
-  "name": "subdomain.example.com",
+  "name": "www.example.com",
   "content": "192.0.2.1",
-  "ttl": 300,
-  "proxied": true
-}
-```
-
-**Parameters:**
-- `type` (string, required) - DNS record type (A, AAAA, CNAME, MX, TXT, NS)
-- `name` (string, required) - DNS record name/subdomain
-- `content` (string, required) - DNS record content/value
-- `ttl` (number, optional) - Time to live in seconds (default: 1)
-- `proxied` (boolean, optional) - Whether to proxy through Cloudflare (only for A/AAAA records)
-
-**Response:**
-```json
-{
-  "success": true,
-  "data": {
-    "id": "record125",
-    "type": "A",
-    "name": "subdomain.example.com",
-    "content": "192.0.2.1",
-    "ttl": 300,
-    "proxied": true
-  },
-  "message": "DNS record created successfully"
-}
-```
-
-**Status Codes:**
-- `201` - Record created successfully
-- `400` - Invalid request data
-- `404` - Domain not found
-- `409` - Record already exists
-- `500` - Server error
-
-**Error Examples:**
-```json
-{
-  "success": false,
-  "message": "Invalid DNS record type",
-  "error": {
-    "code": "VALIDATION_ERROR",
-    "details": {
-      "field": "type",
-      "value": "INVALID"
-    }
-  }
-}
-```
-
-### PUT /api/domains/:id/dns-records/:recordId
-
-Update a specific DNS record.
-
-**Parameters:**
-- `id` (string) - The Cloudflare zone ID
-- `recordId` (string) - The DNS record ID
-
-**Request Body:**
-```json
-{
-  "type": "A",
-  "name": "example.com",
-  "content": "192.0.2.2",
   "ttl": 300,
   "proxied": true
 }
@@ -319,65 +230,58 @@ Update a specific DNS record.
   "data": {
     "id": "record123",
     "type": "A",
-    "name": "example.com",
-    "content": "192.0.2.2",
+    "name": "www.example.com",
+    "content": "192.0.2.1",
     "ttl": 300,
     "proxied": true
   },
-  "message": "DNS record updated successfully"
+  "message": "DNS record created successfully"
 }
 ```
 
-**Status Codes:**
-- `200` - Record updated successfully
-- `400` - Invalid request data
-- `404` - Record not found
-- `500` - Server error
+#### PUT /api/domains/{domainId}/dns-records/{recordId}
+Update a DNS record.
 
-### DELETE /api/domains/:id/dns-records/:recordId
-
-Delete a specific DNS record.
-
-**Parameters:**
-- `id` (string) - The Cloudflare zone ID
-- `recordId` (string) - The DNS record ID
+**Request Body:**
+```json
+{
+  "type": "A",
+  "name": "www.example.com",
+  "content": "192.0.2.2",
+  "ttl": 600,
+  "proxied": false
+}
+```
 
 **Response:**
 ```json
 {
   "success": true,
   "data": {
-    "id": "record123"
+    "id": "record123",
+    "type": "A",
+    "name": "www.example.com",
+    "content": "192.0.2.2",
+    "ttl": 600,
+    "proxied": false
   },
+  "message": "DNS record updated successfully"
+}
+```
+
+#### DELETE /api/domains/{domainId}/dns-records/{recordId}
+Delete a DNS record.
+
+**Response:**
+```json
+{
+  "success": true,
   "message": "DNS record deleted successfully"
 }
 ```
 
-**Status Codes:**
-- `200` - Record deleted successfully
-- `404` - Record or domain not found
-- `500` - Server error
-
-**Error Examples:**
-```json
-{
-  "success": false,
-  "message": "DNS record not found",
-  "error": {
-    "code": "NOT_FOUND_ERROR",
-    "details": {
-      "recordId": "invalid123"
-    }
-  }
-}
-```
-
-### POST /api/domains/:id/ssl-certificate
-
-Request an SSL certificate for a domain.
-
-**Parameters:**
-- `id` (string) - The Cloudflare zone ID
+#### POST /api/domains/{domainId}/ssl-certificate
+Request SSL certificate for a domain.
 
 **Response:**
 ```json
@@ -386,18 +290,17 @@ Request an SSL certificate for a domain.
   "data": {
     "id": "cert123",
     "status": "pending",
-    "issuer": "Let's Encrypt",
-    "requestedAt": "2024-01-01T00:00:00.000Z"
+    "issuer": "Cloudflare",
+    "expiresAt": "2025-01-01T00:00:00.000Z"
   },
   "message": "SSL certificate requested successfully"
 }
 ```
 
-## Page Management
+### Pages Management
 
-### GET /api/pages
-
-Get all Cloudflare Pages projects.
+#### GET /api/pages
+Get all Pages projects.
 
 **Response:**
 ```json
@@ -405,319 +308,325 @@ Get all Cloudflare Pages projects.
   "success": true,
   "data": [
     {
-      "id": "page123",
+      "id": "project123",
       "name": "my-website",
       "status": "deployed",
       "url": "https://my-website.pages.dev",
+      "domains": ["my-website.com"],
       "deploymentId": "deploy123",
       "createdAt": "2024-01-01T00:00:00.000Z",
-      "lastDeployedAt": "2024-01-01T12:00:00.000Z"
+      "lastDeployedAt": "2024-01-01T00:00:00.000Z"
     }
   ],
-  "message": "Pages retrieved successfully"
+  "message": "Pages projects retrieved successfully"
 }
 ```
 
-### POST /api/pages
-
-Create a new Cloudflare Pages project.
+#### POST /api/pages
+Create a new Pages project.
 
 **Request Body:**
 ```json
 {
-  "name": "my-new-website"
+  "name": "my-website",
+  "productionBranch": "main"
 }
 ```
-
-**Parameters:**
-- `name` (string, required) - The project name (must be unique and URL-safe)
 
 **Response:**
 ```json
 {
   "success": true,
   "data": {
-    "id": "page124",
-    "name": "my-new-website",
+    "id": "project123",
+    "name": "my-website",
     "status": "created",
-    "url": "https://my-new-website.pages.dev",
     "createdAt": "2024-01-01T00:00:00.000Z"
   },
-  "message": "Page project created successfully"
+  "message": "Pages project created successfully"
 }
 ```
 
-**Status Codes:**
-- `201` - Project created successfully
-- `400` - Invalid project name
-- `409` - Project name already exists
-- `500` - Server error
+#### POST /api/pages/{projectName}/deploy
+Deploy a Pages project.
 
-### POST /api/pages/:id/deploy
-
-Deploy a ZIP file to a Cloudflare Pages project.
-
-**Parameters:**
-- `id` (string) - The Cloudflare Pages project ID
-
-**Request:**
-- Content-Type: `multipart/form-data`
-- Body: ZIP file containing static website files
+**Request Body:**
+```json
+{
+  "files": [
+    {
+      "name": "index.html",
+      "content": "<html>...</html>"
+    }
+  ]
+}
+```
 
 **Response:**
 ```json
 {
   "success": true,
   "data": {
-    "id": "deploy124",
+    "id": "deploy123",
     "status": "queued",
-    "url": "https://my-website.pages.dev",
-    "createdAt": "2024-01-01T00:00:00.000Z"
+    "url": "https://my-website.pages.dev"
   },
   "message": "Deployment started successfully"
 }
 ```
 
-**Status Codes:**
-- `202` - Deployment accepted and queued
-- `400` - Invalid file or file too large
-- `404` - Project not found
-- `500` - Server error
-
-**File Requirements:**
-- Format: ZIP archive
-- Maximum size: 10MB
-- Must contain valid static website files (HTML, CSS, JS, images, etc.)
-
-### GET /api/pages/:id/deployment-status
-
-Get the current deployment status for a project.
-
-**Parameters:**
-- `id` (string) - The Cloudflare Pages project ID
+#### GET /api/pages/{projectName}/upload-url
+Get upload URL for direct file uploads.
 
 **Response:**
 ```json
 {
   "success": true,
   "data": {
+    "uploadUrl": "https://api.cloudflare.com/client/v4/accounts/.../pages/projects/my-website/upload-tokens/...",
+    "expiresAt": "2024-01-01T01:00:00.000Z"
+  },
+  "message": "Upload URL generated successfully"
+}
+```
+
+#### GET /api/pages/{projectName}/deployment-status
+Get deployment status.
+
+**Query Parameters:**
+- `deploymentId` (required): Deployment ID
+
+**Response:**
+```json
+{
+  "success": true,
+  "data": {
+    "id": "deploy123",
     "status": "success",
-    "progress": 100,
     "url": "https://my-website.pages.dev",
-    "logs": [
-      "Building project...",
-      "Deploying to Cloudflare Pages...",
-      "Deployment successful!"
-    ],
-    "completedAt": "2024-01-01T00:05:00.000Z"
+    "errorMessage": null
   },
   "message": "Deployment status retrieved successfully"
 }
 ```
 
-**Deployment Status Values:**
-- `queued` - Deployment is queued
-- `building` - Project is being built
-- `deploying` - Files are being deployed
-- `success` - Deployment completed successfully
-- `failure` - Deployment failed
+#### POST /api/pages/assets/check-missing
+Check for missing assets in a deployment.
 
-**Error Response for Failed Deployment:**
+**Request Body:**
+```json
+{
+  "deploymentId": "deploy123",
+  "assets": [
+    {
+      "name": "style.css",
+      "hash": "abc123"
+    }
+  ]
+}
+```
+
+**Response:**
 ```json
 {
   "success": true,
   "data": {
-    "status": "failure",
-    "progress": 50,
-    "errorMessage": "Build failed: Missing index.html file",
-    "logs": [
-      "Building project...",
-      "Error: No index.html found in root directory"
-    ],
-    "failedAt": "2024-01-01T00:03:00.000Z"
+    "missingAssets": [
+      {
+        "name": "style.css",
+        "hash": "abc123"
+      }
+    ]
   },
-  "message": "Deployment failed"
+  "message": "Missing assets checked successfully"
+}
+```
+
+#### POST /api/pages/assets/upload
+Upload assets for a deployment.
+
+**Request Body:**
+```json
+{
+  "deploymentId": "deploy123",
+  "assets": [
+    {
+      "name": "style.css",
+      "content": "body { color: red; }"
+    }
+  ]
+}
+```
+
+**Response:**
+```json
+{
+  "success": true,
+  "data": {
+    "uploadedAssets": [
+      {
+        "name": "style.css",
+        "hash": "abc123"
+      }
+    ]
+  },
+  "message": "Assets uploaded successfully"
+}
+```
+
+#### GET /api/pages/{projectName}/domains
+Get custom domains for a Pages project.
+
+**Response:**
+```json
+{
+  "success": true,
+  "data": [
+    {
+      "name": "my-website.com",
+      "status": "active"
+    }
+  ],
+  "message": "Project domains retrieved successfully"
+}
+```
+
+#### POST /api/pages/{projectName}/domains
+Add a custom domain to a Pages project.
+
+**Request Body:**
+```json
+{
+  "domain": "my-website.com"
+}
+```
+
+**Response:**
+```json
+{
+  "success": true,
+  "data": {
+    "name": "my-website.com",
+    "status": "pending"
+  },
+  "message": "Domain added successfully"
+}
+```
+
+#### DELETE /api/pages/{projectName}/domains/{domainName}
+Remove a custom domain from a Pages project.
+
+**Response:**
+```json
+{
+  "success": true,
+  "message": "Domain removed successfully"
 }
 ```
 
 ## Error Codes
 
-### Common Error Codes
-
 | Code | Description |
 |------|-------------|
-| `VALIDATION_ERROR` | Request data validation failed |
-| `NETWORK_ERROR` | Network connectivity issues |
-| `CLOUDFLARE_API_ERROR` | Cloudflare API returned an error |
-| `FILE_UPLOAD_ERROR` | File upload validation failed |
-| `AUTHENTICATION_ERROR` | Cloudflare API authentication failed |
+| `NOT_FOUND` | Resource not found |
+| `VALIDATION_ERROR` | Request validation failed |
+| `RATE_LIMIT_EXCEEDED` | Rate limit exceeded |
+| `STRICT_RATE_LIMIT_EXCEEDED` | Strict rate limit exceeded for sensitive endpoints |
+| `CLOUDFLARE_API_ERROR` | Cloudflare API error |
+| `FILE_UPLOAD_ERROR` | File upload failed |
+| `AUTHENTICATION_ERROR` | Authentication failed |
 | `SERVER_ERROR` | Internal server error |
-| `DOMAIN_NOT_FOUND` | Requested domain does not exist |
-| `PAGE_NOT_FOUND` | Requested page project does not exist |
-| `DEPLOYMENT_FAILED` | Page deployment failed |
+| `CONFIGURATION_ERROR` | Configuration error |
+| `CONFLICT_ERROR` | Resource conflict |
 
-### HTTP Status Codes
+## CORS
 
-| Status | Meaning |
-|--------|---------|
-| `200` | OK - Request successful |
-| `201` | Created - Resource created successfully |
-| `202` | Accepted - Request accepted for processing |
-| `400` | Bad Request - Invalid request data |
-| `404` | Not Found - Resource not found |
-| `409` | Conflict - Resource already exists |
-| `413` | Payload Too Large - File too large |
-| `429` | Too Many Requests - Rate limit exceeded |
-| `500` | Internal Server Error - Server error |
-| `502` | Bad Gateway - Cloudflare API error |
-| `503` | Service Unavailable - Service temporarily unavailable |
+The API supports CORS for the following origins:
+- `https://luckyjingwen.top`
+- `https://www.luckyjingwen.top`
+- `https://cloudflare-static-deployer.pages.dev`
+
+## Security Headers
+
+All responses include security headers:
+- `X-Content-Type-Options: nosniff`
+- `X-Frame-Options: DENY`
+- `X-XSS-Protection: 1; mode=block`
+- `Referrer-Policy: strict-origin-when-cross-origin`
+- `Strict-Transport-Security: max-age=31536000; includeSubDomains; preload`
+- `Permissions-Policy: camera=(), microphone=(), geolocation=(), payment=(), usb=()`
 
 ## Rate Limiting
 
-The API implements rate limiting to prevent abuse:
+The API implements two levels of rate limiting:
 
-- **Default Limit**: 100 requests per 15 minutes per IP address
-- **Headers**: Rate limit information is included in response headers:
-  - `X-RateLimit-Limit`: Maximum requests allowed
-  - `X-RateLimit-Remaining`: Remaining requests in current window
-  - `X-RateLimit-Reset`: Time when the rate limit resets
+1. **General Rate Limiting**: 1000 requests per 15 minutes for all endpoints
+2. **Strict Rate Limiting**: 100 requests per minute for sensitive endpoints (`/api/domains`, `/api/pages`)
 
-**Rate Limit Exceeded Response:**
-```json
-{
-  "success": false,
-  "message": "Rate limit exceeded. Please try again later.",
-  "error": {
-    "code": "RATE_LIMIT_EXCEEDED",
-    "details": {
-      "limit": 100,
-      "window": 900,
-      "resetTime": "2024-01-01T00:15:00.000Z"
-    }
-  }
-}
-```
+Rate limit information is provided in response headers:
+- `X-RateLimit-Limit`: Maximum requests allowed
+- `X-RateLimit-Remaining`: Remaining requests in current window
+- `X-RateLimit-Reset`: Unix timestamp when the rate limit resets
 
-## File Upload Specifications
+## File Upload Limits
 
-### Supported File Types
-- ZIP archives (`.zip`)
-- Content-Type: `application/zip`
+- **Maximum file size**: 10MB
+- **Allowed file types**: `application/zip`, `application/x-zip-compressed`
+- **Upload timeout**: 30 seconds
 
-### File Size Limits
-- Maximum file size: 10MB (10,485,760 bytes)
-- Configurable via `MAX_FILE_SIZE` environment variable
+## Examples
 
-### ZIP File Requirements
-- Must contain valid static website files
-- Should include an `index.html` file in the root directory
-- Supported file types within ZIP:
-  - HTML files (`.html`, `.htm`)
-  - CSS files (`.css`)
-  - JavaScript files (`.js`)
-  - Images (`.png`, `.jpg`, `.jpeg`, `.gif`, `.svg`, `.webp`)
-  - Fonts (`.woff`, `.woff2`, `.ttf`, `.otf`)
-  - Other static assets
-
-### File Validation
-The API validates uploaded files for:
-- File type and extension
-- File size limits
-- ZIP archive integrity
-- Presence of required files (index.html)
-
-## WebSocket Support
-
-Currently, the API does not support WebSocket connections. Real-time updates for deployment status are achieved through polling the deployment status endpoint.
-
-## CORS Configuration
-
-The API supports Cross-Origin Resource Sharing (CORS) with the following configuration:
-
-- **Development**: `http://localhost:5173` (Vite dev server)
-- **Production**: Configurable via `CORS_ORIGINS` environment variable
-- **Credentials**: Supported for authenticated requests
-- **Methods**: GET, POST, PUT, DELETE, OPTIONS
-- **Headers**: Content-Type, Authorization, X-Requested-With
-
-## API Versioning
-
-Currently, the API is version 1 and does not include version numbers in the URL. Future versions will be introduced as needed with appropriate versioning strategy.
-
-## SDK and Client Libraries
-
-### JavaScript/TypeScript Client
-
-The frontend includes a TypeScript API client that can be used as a reference for implementing other clients:
+### JavaScript/TypeScript
 
 ```typescript
-// Example usage
-import { ApiClient } from './services/api';
+// Get all domains
+const response = await fetch('https://api.luckyjingwen.top/api/domains');
+const data = await response.json();
 
-const client = new ApiClient('http://localhost:3000');
+if (data.success) {
+  console.log('Domains:', data.data);
+} else {
+  console.error('Error:', data.message);
+}
 
-// Get domains
-const domains = await client.getDomains();
-
-// Add domain
-const newDomain = await client.addDomain({
-  name: 'example.com',
-  nameservers: ['ns1.cloudflare.com', 'ns2.cloudflare.com']
+// Create a new domain
+const createResponse = await fetch('https://api.luckyjingwen.top/api/domains', {
+  method: 'POST',
+  headers: {
+    'Content-Type': 'application/json',
+  },
+  body: JSON.stringify({
+    name: 'example.com',
+    nameservers: ['ns1.example.com', 'ns2.example.com']
+  })
 });
 
-// Deploy page
-const deployment = await client.deployPage('pageId', zipFile);
+const createData = await createResponse.json();
 ```
 
-## Testing the API
-
-### Using curl
+### cURL
 
 ```bash
-# Health check
-curl http://localhost:3000/health
+# Get all domains
+curl -X GET https://api.luckyjingwen.top/api/domains
 
-# Get domains
-curl http://localhost:3000/api/domains
-
-# Add domain
-curl -X POST http://localhost:3000/api/domains \
+# Create a new domain
+curl -X POST https://api.luckyjingwen.top/api/domains \
   -H "Content-Type: application/json" \
-  -d '{"name": "example.com"}'
+  -d '{"name": "example.com", "nameservers": ["ns1.example.com", "ns2.example.com"]}'
 
-# Upload ZIP file
-curl -X POST http://localhost:3000/api/pages/page123/deploy \
-  -F "file=@website.zip"
+# Deploy a Pages project
+curl -X POST https://api.luckyjingwen.top/api/pages/my-website/deploy \
+  -H "Content-Type: application/json" \
+  -d '{"files": [{"name": "index.html", "content": "<html>Hello World</html>"}]}'
 ```
 
-### Using Postman
+## Changelog
 
-Import the following collection for testing:
-
-1. Create a new Postman collection
-2. Add requests for each endpoint
-3. Set up environment variables for base URL
-4. Test all endpoints with various scenarios
-
-## Support and Troubleshooting
-
-### Common Issues
-
-1. **CORS Errors**: Ensure CORS_ORIGINS is properly configured
-2. **File Upload Failures**: Check file size and format
-3. **Cloudflare API Errors**: Verify API token permissions
-4. **Rate Limiting**: Implement proper retry logic with exponential backoff
-
-### Getting Help
-
-1. Check server logs for detailed error information
-2. Verify Cloudflare API token permissions
-3. Test API endpoints individually
-4. Review this documentation for proper usage
-
-### Monitoring
-
-The API provides health check endpoints for monitoring:
-- `/health` - Basic health check
-- Application logs include request/response information
-- Error tracking and monitoring can be integrated as needed
+### v1.0.0
+- Initial API release
+- Domain management endpoints
+- Pages management endpoints
+- Rate limiting implementation
+- Security headers
+- CORS support

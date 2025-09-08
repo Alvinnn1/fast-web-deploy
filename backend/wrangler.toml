@@ -6,11 +6,11 @@ compatibility_flags = ["nodejs_compat"]
 
 # Worker configuration
 [build]
-command = "echo 'No build needed for simple worker'"
+command = "npm run build"
 cwd = "."
-watch_dir = ["worker-simple.ts"]
+watch_dir = ["worker.ts", "src/"]
 
-# Production Environment Variables
+# Environment Variables (will be loaded from .env file in development)
 [vars]
 NODE_ENV = "production"
 CORS_ORIGINS = "https://luckyjingwen.top,https://www.luckyjingwen.top,https://cloudflare-static-deployer.pages.dev"
@@ -21,10 +21,19 @@ LOG_LEVEL = "info"
 ENABLE_SECURITY_HEADERS = "true"
 ENABLE_CSP = "true"
 ENABLE_RATE_LIMITING = "true"
-RATE_LIMIT_MAX = "100"
+RATE_LIMIT_MAX = "1000"
 RATE_LIMIT_WINDOW = "900000"
 MAX_FILE_SIZE = "10485760"
 ALLOWED_FILE_TYPES = "application/zip,application/x-zip-compressed"
+
+# Development Environment Variables (loaded from .env file)
+[env.development.vars]
+NODE_ENV = "development"
+LOG_LEVEL = "debug"
+
+# Development server configuration
+[dev]
+port = 3000
 
 # Routes configuration
 [[routes]]

@@ -40,7 +40,8 @@ A user-friendly web application that simplifies deploying static websites to Clo
 - **Vite** - Fast build tool and development server
 
 ### Backend
-- **Fastify** - High-performance Node.js web framework
+- **Cloudflare Workers** - Serverless runtime for backend services
+- **Wrangler** - Development and deployment tool for Workers
 - **TypeScript** - Full type safety across the stack
 - **Cloudflare API** - Direct integration with Cloudflare services
 - **File Upload Handling** - Secure ZIP file processing
@@ -63,11 +64,11 @@ cloudflare-static-deployer/
 │   │   └── utils/          # Helper functions
 │   ├── package.json
 │   └── vite.config.ts
-├── backend/                 # Fastify backend API
+├── backend/                 # Cloudflare Workers backend API
 │   ├── src/
 │   │   ├── routes/         # API route handlers
 │   │   ├── services/       # Business logic and Cloudflare API client
-│   │   ├── middleware/     # Express middleware
+│   │   ├── middleware/     # Workers middleware
 │   │   ├── utils/          # Utility functions
 │   │   └── config/         # Configuration management
 │   ├── package.json
@@ -100,8 +101,8 @@ cloudflare-static-deployer/
 
 3. **Configure environment variables**
    ```bash
-   cp backend/.env.example backend/.env
-   # Edit backend/.env with your Cloudflare API token
+   # Create .env file in backend directory with your Cloudflare API token
+   # Required variables: CLOUDFLARE_API_TOKEN, CLOUDFLARE_ACCOUNT_ID, CLOUDFLARE_EMAIL
    ```
 
 4. **Start development servers**
@@ -111,7 +112,7 @@ cloudflare-static-deployer/
 
    This starts:
    - Frontend dev server: http://localhost:5173
-   - Backend API server: http://localhost:3000
+   - Backend API server: http://localhost:3000 (Wrangler dev server)
 
 ### Production Deployment
 
@@ -222,11 +223,12 @@ npm run type-check            # TypeScript type checking
 ```bash
 cd backend
 
-npm run dev                   # Start development server with hot reload
+npm run dev                   # Start Wrangler development server
 npm run build                 # Compile TypeScript to JavaScript
-npm run start                 # Start production server
+npm run wrangler:dev          # Start Wrangler development server
+npm run wrangler:deploy       # Deploy to Cloudflare Workers
+npm run wrangler:tail         # View Workers logs
 npm run lint                  # Run ESLint
-npm run test                  # Run unit tests
 npm run type-check            # TypeScript type checking
 ```
 
@@ -377,7 +379,7 @@ See [DEPLOYMENT.md](DEPLOYMENT.md) for detailed instructions.
 ## 📈 Performance
 
 - **Frontend**: Optimized Vue 3 build with code splitting
-- **Backend**: High-performance Fastify server
+- **Backend**: Cloudflare Workers serverless runtime
 - **Caching**: Appropriate HTTP caching headers
 - **Compression**: Gzip compression for all text assets
 - **CDN**: Cloudflare CDN for global performance
@@ -399,5 +401,5 @@ Private project - All rights reserved
 
 - **Cloudflare** - For providing excellent APIs and infrastructure
 - **Vue.js Team** - For the amazing Vue 3 framework
-- **Fastify Team** - For the high-performance web framework
+- **Cloudflare Workers Team** - For the serverless runtime platform
 - **Tailwind CSS** - For the utility-first CSS framework

@@ -5,7 +5,27 @@
  * It adapts the Fastify-based backend to work in the Workers environment.
  */
 
-import { WorkersRouter, Env } from './src/adapters/workers-router.js'
+import { WorkersRouter } from './src/adapters/workers-router.js'
+
+// Define Env interface for Workers
+export interface Env {
+  CLOUDFLARE_API_TOKEN: string
+  CLOUDFLARE_ACCOUNT_ID: string
+  CLOUDFLARE_EMAIL: string
+  CORS_ORIGINS: string
+  NODE_ENV: string
+  LOG_LEVEL?: string
+  MAX_FILE_SIZE?: string
+  ALLOWED_FILE_TYPES?: string
+  RATE_LIMIT_MAX?: string
+  RATE_LIMIT_WINDOW?: string
+  TRUSTED_PROXIES?: string
+  BLOCKED_IPS?: string
+  ALLOWED_IPS?: string
+  ENABLE_SECURITY_HEADERS?: string
+  ENABLE_CSP?: string
+  ENABLE_RATE_LIMITING?: string
+}
 
 export default {
   async fetch(request: Request, env: Env): Promise<Response> {
@@ -71,5 +91,4 @@ export default {
   }
 }
 
-// Export types for TypeScript support
-export { Env }
+// Env interface is already exported above

@@ -2,13 +2,12 @@
   "name": "cloudflare-static-deployer-backend",
   "version": "1.0.0",
   "description": "Backend API for Cloudflare static deployer",
-  "main": "dist/index.js",
+  "main": "worker.ts",
   "type": "module",
   "scripts": {
-    "dev": "tsx watch src/index.ts",
-    "build": "tsc",
-    "build:workers": "tsc --project tsconfig.workers.json",
-    "start": "node dist/index.js",
+    "dev": "wrangler dev",
+    "build": "tsc --project tsconfig.workers.json && node scripts/fix-worker-exports.js",
+    "start": "wrangler dev",
     "lint": "eslint src --ext .ts --fix",
     "lint:check": "eslint src --ext .ts",
     "type-check": "tsc --noEmit",
@@ -19,19 +18,13 @@
     "workers:validate": "node scripts/validate-workers-config.js"
   },
   "dependencies": {
-    "fastify": "^4.24.0",
-    "@fastify/cors": "^8.4.0",
-    "@fastify/multipart": "^8.0.0",
-    "@fastify/static": "^6.12.0",
-    "axios": "^1.6.0",
-    "dotenv": "^16.3.0"
+    "axios": "^1.6.0"
   },
   "devDependencies": {
     "@types/node": "^20.10.0",
     "@typescript-eslint/eslint-plugin": "^6.14.0",
     "@typescript-eslint/parser": "^6.14.0",
     "eslint": "^8.55.0",
-    "tsx": "^4.6.0",
     "typescript": "^5.3.0",
     "wrangler": "^3.22.0",
     "@cloudflare/workers-types": "^4.20231218.0"

@@ -73,7 +73,7 @@ export class WorkersMiddleware {
   async strictRateLimit(request: Request, key?: string): Promise<{ allowed: boolean; remaining: number; resetTime?: number }> {
     const clientKey = `strict:${key || this.getClientIP(request)}`
     const now = Date.now()
-    const strictLimit = 10 // 10 requests per minute for sensitive endpoints
+    const strictLimit = 100 // 100 requests per minute for sensitive endpoints
     const strictWindow = 60000 // 1 minute
 
     this.cleanupExpiredRateLimits(now)

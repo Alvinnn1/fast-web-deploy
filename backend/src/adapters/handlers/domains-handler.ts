@@ -162,6 +162,7 @@ export class DomainsHandler {
     try {
       const cert = await this.cloudflareClient.getSSLCertificate(domainId)
       sslCertificate = transformSSLCertificate(cert)
+      console.log('sslCertificate', sslCertificate)
     } catch (error) {
       // SSL certificate may not exist, that's okay
       sslCertificate = undefined
