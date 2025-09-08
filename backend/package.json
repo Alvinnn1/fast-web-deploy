@@ -7,6 +7,7 @@
   "scripts": {
     "dev": "wrangler dev",
     "build": "tsc --project tsconfig.workers.json && node scripts/fix-worker-exports.js",
+    "build:workers": "tsc --project tsconfig.workers.json",
     "start": "wrangler dev",
     "lint": "eslint src --ext .ts --fix",
     "lint:check": "eslint src --ext .ts",
