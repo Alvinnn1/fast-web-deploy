@@ -2,25 +2,32 @@
 
 A user-friendly web application that simplifies deploying static websites to Cloudflare platform with comprehensive domain management capabilities. Designed for non-technical users who want to leverage Cloudflare's powerful infrastructure without dealing with complex configurations.
 
+[中文](README_SIMPLIFIED.md)
+
 ## ✨ Features
 
 ### 🌐 Domain Management
-- **Domain List View**: View all your Cloudflare domains with status information
+- **Paginated Domain List**: View all your Cloudflare domains with pagination support (10 items per page)
 - **Add New Domains**: Easily add domains to your Cloudflare account
+- **Domain Details**: Comprehensive domain information and management
 - **DNS Management**: View and edit DNS records with a simple interface
-- **SSL Certificate Management**: One-click SSL certificate provisioning
+- **SSL Certificate Management**: View multiple SSL certificates with detailed information
+- **Keep-Alive State**: Maintain data when switching between tabs for better UX
 
 ### 📄 Static Site Deployment
-- **Page Project Management**: Create and manage Cloudflare Pages projects
-- **ZIP Upload Deployment**: Deploy static sites by uploading ZIP files
+- **Paginated Pages List**: Create and manage Cloudflare Pages projects with pagination
+- **Upload Deployment**: Deploy static sites by uploading files
 - **Real-time Deployment Status**: Monitor deployment progress with live updates
 - **Automatic URL Generation**: Get instant access URLs for deployed sites
+- **State Persistence**: Page data persists when navigating between sections
 
 ### 🎨 User Experience
 - **Purple Theme Design**: Clean, modern interface with purple accent colors
-- **Responsive Layout**: Optimized for desktop usage
+- **Responsive Layout**: Optimized for desktop usage with hover effects
 - **Real-time Feedback**: Loading states and error handling throughout
-- **Intuitive Navigation**: Tab-based interface for easy switching between features
+- **Intuitive Navigation**: Tab-based interface with keep-alive functionality
+- **Pagination Component**: Reusable pagination with smooth hover transitions
+- **Global State Management**: Efficient data caching and state persistence
 
 ### 📊 Monitoring & Health Checks
 - **Enhanced Health Checks**: Comprehensive system status monitoring
@@ -38,13 +45,17 @@ A user-friendly web application that simplifies deploying static websites to Clo
 - **Radix Vue** - Accessible UI components
 - **Lucide Vue** - Beautiful icon library
 - **Vite** - Fast build tool and development server
+- **Vue Keep-Alive** - Component state persistence across tab switches
+- **Reactive State Management** - Global state with reactive composables
 
 ### Backend
 - **Cloudflare Workers** - Serverless runtime for backend services
 - **Wrangler** - Development and deployment tool for Workers
 - **TypeScript** - Full type safety across the stack
 - **Cloudflare API** - Direct integration with Cloudflare services
-- **File Upload Handling** - Secure ZIP file processing
+- **File Upload Handling** - Secure folder file processing
+- **Pagination Support** - Server-side pagination for large datasets
+- **Response Formatting** - Standardized API response structure
 
 ### Infrastructure
 - **Node.js 18+** - Runtime environment
@@ -58,7 +69,9 @@ cloudflare-static-deployer/
 ├── frontend/                 # Vue 3 frontend application
 │   ├── src/
 │   │   ├── components/      # Reusable Vue components
+│   │   │   └── ui/         # UI component library (Pagination, etc.)
 │   │   ├── views/          # Page-level components
+│   │   ├── composables/    # Vue composables for state management
 │   │   ├── services/       # API client and utilities
 │   │   ├── types/          # TypeScript type definitions
 │   │   └── utils/          # Helper functions
@@ -66,11 +79,10 @@ cloudflare-static-deployer/
 │   └── vite.config.ts
 ├── backend/                 # Cloudflare Workers backend API
 │   ├── src/
-│   │   ├── routes/         # API route handlers
-│   │   ├── services/       # Business logic and Cloudflare API client
-│   │   ├── middleware/     # Workers middleware
-│   │   ├── utils/          # Utility functions
-│   │   └── config/         # Configuration management
+│   │   ├── adapters/       # API route handlers and external integrations
+│   │   │   └── handlers/   # Domain and Pages API handlers
+│   │   ├── utils/          # Utility functions (pagination, etc.)
+│   │   └── types.ts        # TypeScript type definitions
 │   ├── package.json
 │   └── tsconfig.json
 ├── scripts/                # Deployment and utility scripts
@@ -116,7 +128,7 @@ cloudflare-static-deployer/
 
 ### Production Deployment
 
-See [DEPLOYMENT.md](DEPLOYMENT.md) for comprehensive deployment instructions.
+See [DEPLOYMENT](DEPLOYMENT_SIMPLIFIED.md) for comprehensive deployment instructions.
 
 #### Quick Cloudflare Deployment
 
@@ -236,11 +248,31 @@ npm run type-check            # TypeScript type checking
 
 ### Domain Management Endpoints
 
-#### Get Domains
+#### Get Domains (with Pagination)
 ```http
-GET /api/domains
+GET /api/domains?page=1&per_page=10
 ```
-Returns list of all domains in your Cloudflare account.
+Returns paginated list of domains in your Cloudflare account.
+
+**Query Parameters:**
+- `page` (optional): Page number (default: 1)
+- `per_page` (optional): Items per page (default: 10, max: 50)
+
+**Response:**
+```json
+{
+  "success": true,
+  "data": [...],
+  "pagination": {
+    "page": 1,
+    "per_page": 10,
+    "total": 25,
+    "total_pages": 3,
+    "has_next": true,
+    "has_prev": false
+  }
+}
+```
 
 #### Add Domain
 ```http
@@ -266,15 +298,28 @@ PUT /api/domains/:id/dns-records/:recordId
 
 #### SSL Certificate Management
 ```http
+GET /api/domains/:id/ssl-certificates
+```
+Get all SSL certificates for a domain.
+
+```http
 POST /api/domains/:id/ssl-certificate
 ```
+Request a new SSL certificate for a domain.
 
 ### Page Management Endpoints
 
-#### Get Pages
+#### Get Pages (with Pagination)
 ```http
-GET /api/pages
+GET /api/pages?page=1&per_page=10
 ```
+Returns paginated list of Cloudflare Pages projects.
+
+**Query Parameters:**
+- `page` (optional): Page number (default: 1)
+- `per_page` (optional): Items per page (default: 10, max: 50)
+
+**Response:** Same pagination structure as domains endpoint.
 
 #### Create Page Project
 ```http
@@ -291,7 +336,7 @@ Content-Type: application/json
 POST /api/pages/:id/deploy
 Content-Type: multipart/form-data
 
-file: [ZIP file containing static website]
+file: [ file containing static website]
 ```
 
 #### Get Deployment Status
@@ -344,8 +389,7 @@ npm run test:watch
 
 3. **"File upload fails"**
    - Check file size (must be < 10MB)
-   - Ensure file is a valid ZIP archive
-   - Verify ZIP contains valid static website files
+   - Verify folder contains valid static website files
 
 4. **"Frontend can't connect to backend"**
    - Ensure backend is running on port 3000
@@ -354,7 +398,7 @@ npm run test:watch
 
 ### Getting Help
 
-1. Check the [Deployment Guide](DEPLOYMENT.md)
+1. Check the [Deployment Guide](DEPLOYMENT_SIMPLIFIED.md)
 2. Review application logs
 3. Verify environment configuration
 4. Test Cloudflare API connectivity manually
@@ -374,15 +418,17 @@ npm run test:watch
 3. **Manual Deployment**: Traditional server deployment
 4. **Cloud Platforms**: Heroku, Railway, DigitalOcean App Platform
 
-See [DEPLOYMENT.md](DEPLOYMENT.md) for detailed instructions.
+See [DEPLOYMENT](DEPLOYMENT_SIMPLIFIED.md) for detailed instructions.
 
 ## 📈 Performance
 
-- **Frontend**: Optimized Vue 3 build with code splitting
-- **Backend**: Cloudflare Workers serverless runtime
-- **Caching**: Appropriate HTTP caching headers
+- **Frontend**: Optimized Vue 3 build with code splitting and keep-alive caching
+- **Backend**: Cloudflare Workers serverless runtime with pagination support
+- **State Management**: Reactive global state for efficient data persistence
+- **Caching**: Appropriate HTTP caching headers and component state caching
 - **Compression**: Gzip compression for all text assets
 - **CDN**: Cloudflare CDN for global performance
+- **UI Components**: Reusable components with smooth hover transitions
 
 ## 🤝 Contributing
 
