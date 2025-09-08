@@ -133,6 +133,73 @@ An alert component for displaying messages with different severity levels.
 </Alert>
 ```
 
+### Pagination
+A clean and simple pagination component with responsive design.
+
+**Props:**
+- `currentPage`: number (required) - Current active page
+- `pageSize`: number (required) - Number of items per page (fixed at 10)
+- `total`: number (required) - Total number of items
+- `showPages`: number (default: 7) - Number of page buttons to display
+
+**Events:**
+- `pageChange`: (page: number) - Emitted when page changes
+
+**Features:**
+- Responsive design (simplified mobile view)
+- Ellipsis for large page counts
+- Fixed page size of 10 items per page
+- Accessibility support with ARIA labels
+- First/Last page navigation buttons
+- Clean and minimal interface
+
+**Usage:**
+```vue
+<Pagination
+  :current-page="currentPage"
+  :page-size="10"
+  :total="totalItems"
+  @page-change="handlePageChange"
+/>
+```
+
+**Example with data:**
+```vue
+<template>
+  <div>
+    <!-- Your data list -->
+    <div v-for="item in currentPageData" :key="item.id">
+      {{ item.name }}
+    </div>
+    
+    <!-- Pagination -->
+    <Pagination
+      :current-page="pagination.current_page"
+      :page-size="pagination.per_page"
+      :total="allData.length"
+      @page-change="handlePageChange"
+    />
+  </div>
+</template>
+
+<script setup>
+const pagination = ref({
+  currentPage: 1,
+  pageSize: 10
+})
+
+const currentPageData = computed(() => {
+  const start = (pagination.value.currentPage - 1) * pagination.value.pageSize
+  const end = start + pagination.value.pageSize
+  return allData.value.slice(start, end)
+})
+
+const handlePageChange = (page) => {
+  pagination.value.currentPage = page
+}
+</script>
+```
+
 ## Theme Configuration
 
 All components use the purple color scheme defined in the Tailwind configuration:

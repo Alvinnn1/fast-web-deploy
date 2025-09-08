@@ -243,7 +243,13 @@ export const apiClient = new ApiClient(baseURL)
 export const api = {
   // 域名相关API
   domains: {
-    list: () => apiClient.get<Domain[]>('/api/domains'),
+    list: (page?: number, per_page?: number) => {
+      const params = new URLSearchParams()
+      if (page) params.append('page', page.toString())
+      if (per_page) params.append('per_page', per_page.toString())
+      const query = params.toString() ? `?${params.toString()}` : ''
+      return apiClient.get<any>(`/api/domains${query}`)
+    },
     create: (data: { name: string; nameservers?: string[] }) =>
       apiClient.post<Domain>('/api/domains', data),
     getDetail: (id: string) => apiClient.get<DomainDetail>(`/api/domains/${id}`),
@@ -254,12 +260,19 @@ export const api = {
       apiClient.post<DNSRecord>(`/api/domains/${domainId}/dns-records`, data),
     deleteDnsRecord: (domainId: string, recordId: string) =>
       apiClient.delete<void>(`/api/domains/${domainId}/dns-records/${recordId}`),
+    getSSLCertificates: (id: string) => apiClient.get<SSLCertificate[]>(`/api/domains/${id}/ssl-certificates`),
     requestSSL: (id: string) => apiClient.post<SSLCertificate>(`/api/domains/${id}/ssl-certificate`),
   },
 
   // 页面相关API
   pages: {
-    list: () => apiClient.get<Page[]>('/api/pages'),
+    list: (page?: number, per_page?: number) => {
+      const params = new URLSearchParams()
+      if (page) params.append('page', page.toString())
+      if (per_page) params.append('per_page', per_page.toString())
+      const query = params.toString() ? `?${params.toString()}` : ''
+      return apiClient.get<any>(`/api/pages${query}`)
+    },
     create: (data: { name: string }) => apiClient.post<Page>('/api/pages', data),
 
     // 获取直接上传URL

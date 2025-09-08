@@ -174,7 +174,7 @@ export class WorkersCloudflareClient {
 
   // SSL Certificate Management Methods
   async getSSLCertificate(zoneId: string): Promise<any> {
-    return this.makeRequest<any>('GET', `/zones/${zoneId}/ssl/certificate_packs`)
+    return this.makeRequest<any>('GET', `/zones/${zoneId}/ssl/certificate_packs?status=all&per_page=20`)
   }
 
   async requestSSLCertificate(zoneId: string): Promise<any> {

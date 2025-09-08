@@ -6,6 +6,7 @@ import { WorkersCloudflareClient } from '../workers-cloudflare-client.js'
 import { WorkersResponseFormatter } from '../workers-response-formatter.js'
 import { WorkersErrorHandler } from '../workers-error-handler.js'
 import { CreatePageRequest, Page, DeploymentResult, DeploymentStatus, CheckMissingAssetsRequest, AssetsUploadRequest, DeployPageRequest } from '../../types.js'
+import { PaginationHelper } from '../../utils/pagination.js'
 
 // Transform Cloudflare Pages project to our Page interface
 function transformPagesProjectToPage(project: any): Page {
@@ -145,7 +146,7 @@ export class PagesHandler {
 
       // GET /api/pages - Get all pages
       if (pathParts.length === 2 && pathParts[1] === 'pages' && method === 'GET') {
-        return this.getAllPages()
+        return this.getAllPages(request)
       }
 
       // POST /api/pages - Create new page project
@@ -207,7 +208,16 @@ export class PagesHandler {
     }
   }
 
-  private async getAllPages(): Promise<Response> {
+  private async getAllPages(request: Request): Promise<Response> {
+    const url = new URL(request.url)
+    const paginationParams = PaginationHelper.parseParams(url.searchParams)
+
+    // Validate pagination parameters
+    const validation = PaginationHelper.validateParams(paginationParams)
+    if (!validation.valid) {
+      return WorkersResponseFormatter.badRequest(validation.error!)
+    }
+
     // Use configured account ID (no API call needed)
     const accountId = this.cloudflareClient.getConfiguredAccountId()
 
@@ -215,8 +225,11 @@ export class PagesHandler {
     const projects = await this.cloudflareClient.getPagesProjects(accountId)
     const pages = projects.map(transformPagesProjectToPage)
 
+    // Apply pagination
+    const paginatedResult = PaginationHelper.paginate(pages, paginationParams)
+
     return WorkersResponseFormatter.success(
-      pages,
+      paginatedResult,
       'Pages retrieved successfully'
     )
   }

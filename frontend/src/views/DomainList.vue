@@ -42,7 +42,12 @@
     <!-- Domain List -->
     <div v-else class="space-y-4">
       <div class="flex justify-between items-center">
-        <p class="text-sm text-gray-600">共 {{ domains.length }} 个域名</p>
+        <p class="text-sm text-gray-600">
+          共 {{ pagination.total }} 个域名
+          <span v-if="pagination.total > 0">
+            (第 {{ pagination.current_page }} 页，共 {{ pagination.total_pages }} 页)
+          </span>
+        </p>
         <Button @click="fetchDomains" variant="ghost" size="sm" :disabled="loading">
           <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
@@ -55,19 +60,29 @@
       <div class="grid gap-4">
         <DomainItem v-for="domain in domains" :key="domain.id" :domain="domain" @click="handleDomainClick" />
       </div>
+
+      <!-- Pagination -->
+      <div v-if="pagination.total > 0" class="mt-6">
+        <Pagination
+          :current-page="pagination.current_page"
+          :page-size="pagination.per_page"
+          :total="pagination.total"
+          @page-change="handlePageChange"
+        />
+      </div>
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
 import { onMounted, onActivated } from 'vue'
-import { Button, LoadingSpinner, Alert } from '@/components/ui'
+import { Button, LoadingSpinner, Alert, Pagination } from '@/components/ui'
 import DomainItem from '@/components/DomainItem.vue'
-import { useDomains } from '@/composables/useDataCache'
+import { useDomainsPagination } from '@/composables/usePagination'
 import type { Domain } from '@/types'
 
-// Use cached data management
-const { domains, loading, error, loadDomains, refreshDomains, addDomain: addDomainToCache, updateDomain } = useDomains()
+// Use paginated data management
+const { data: domains, loading, error, pagination, fetchData, goToPage, refresh } = useDomainsPagination()
 
 // Emits for parent component communication
 const emit = defineEmits<{
@@ -85,40 +100,37 @@ const handleDomainClick = (domain: Domain) => {
   emit('domainClick', domain)
 }
 
-// Refresh domains (exposed method) - force refresh
-const refresh = () => {
-  return refreshDomains()
+// Handle pagination events
+const handlePageChange = (page: number) => {
+  goToPage(page)
 }
 
-// Load domains without forcing refresh (uses cache if available)
-const loadDomainsFromCache = () => {
-  return loadDomains(false)
+// Refresh domains (exposed method) - force refresh
+const refreshDomains = () => {
+  return refresh()
 }
 
 // Fetch domains (alias for compatibility)
 const fetchDomains = () => {
-  return refreshDomains()
+  return fetchData()
 }
 
 // Load domains on component mount (first time)
 onMounted(() => {
-  loadDomainsFromCache()
+  fetchDomains()
 })
 
 // Load domains when component is activated (keepAlive)
-// Only load if we don't have data or it's been a while
 onActivated(() => {
   // Only load if we don't have any data yet
   if (domains.value.length === 0) {
-    loadDomainsFromCache()
+    fetchDomains()
   }
 })
 
 // Expose methods for parent component
 defineExpose({
-  refresh,
-  fetchDomains,
-  addDomain: addDomainToCache,
-  updateDomain
+  refresh: refreshDomains,
+  fetchData
 })
 </script>

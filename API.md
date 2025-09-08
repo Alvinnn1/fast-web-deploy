@@ -106,24 +106,50 @@ Test API connectivity.
 ### Domain Management
 
 #### GET /api/domains
-Get all domains.
+Get all domains with pagination support.
+
+**Query Parameters:**
+- `page` (optional): Page number (default: 1)
+- `per_page` (optional): Items per page (default: 10, max: 100)
 
 **Response:**
 ```json
 {
   "success": true,
-  "data": [
-    {
-      "id": "zone123",
-      "name": "example.com",
-      "status": "active",
-      "nameservers": ["ns1.cloudflare.com", "ns2.cloudflare.com"],
-      "createdAt": "2024-01-01T00:00:00.000Z",
-      "modifiedAt": "2024-01-01T00:00:00.000Z"
+  "data": {
+    "data": [
+      {
+        "id": "zone123",
+        "name": "example.com",
+        "status": "active",
+        "nameservers": ["ns1.cloudflare.com", "ns2.cloudflare.com"],
+        "createdAt": "2024-01-01T00:00:00.000Z",
+        "modifiedAt": "2024-01-01T00:00:00.000Z"
+      }
+    ],
+    "pagination": {
+      "current_page": 1,
+      "per_page": 10,
+      "total": 25,
+      "total_pages": 3,
+      "has_next_page": true,
+      "has_prev_page": false
     }
-  ],
+  },
   "message": "Domains retrieved successfully"
 }
+```
+
+**Example Requests:**
+```bash
+# Get first page with default page size
+GET /api/domains
+
+# Get second page with 20 items per page
+GET /api/domains?page=2&per_page=20
+
+# Get first page with 5 items per page
+GET /api/domains?page=1&per_page=5
 ```
 
 #### POST /api/domains
@@ -280,6 +306,54 @@ Delete a DNS record.
 }
 ```
 
+#### GET /api/domains/{domainId}/ssl-certificates
+Get all SSL certificates for a domain.
+
+**Response:**
+```json
+{
+  "success": true,
+  "data": [
+    {
+      "id": "cert123",
+      "status": "active",
+      "issuer": "ssl_com",
+      "expiresAt": "2025-01-01T00:00:00.000Z",
+      "hosts": ["example.com", "*.example.com"],
+      "type": "universal",
+      "validationMethod": "txt",
+      "validityDays": 90
+    },
+    {
+      "id": "cert456",
+      "status": "backup_issued",
+      "issuer": "lets_encrypt",
+      "expiresAt": "2025-01-01T00:00:00.000Z",
+      "hosts": ["example.com", "*.example.com"],
+      "type": "universal",
+      "validationMethod": "txt",
+      "validityDays": 90
+    }
+  ],
+  "message": "SSL certificates retrieved successfully"
+}
+```
+
+**Status Values:**
+- `active`: Certificate is active and in use
+- `pending`: Certificate is being issued
+- `expired`: Certificate has expired
+- `backup_issued`: Certificate is issued as backup
+
+**Empty Response (No Certificates):**
+```json
+{
+  "success": true,
+  "data": [],
+  "message": "No SSL certificates found"
+}
+```
+
 #### POST /api/domains/{domainId}/ssl-certificate
 Request SSL certificate for a domain.
 
@@ -291,7 +365,11 @@ Request SSL certificate for a domain.
     "id": "cert123",
     "status": "pending",
     "issuer": "Cloudflare",
-    "expiresAt": "2025-01-01T00:00:00.000Z"
+    "expiresAt": "2025-01-01T00:00:00.000Z",
+    "hosts": ["example.com", "*.example.com"],
+    "type": "universal",
+    "validationMethod": "txt",
+    "validityDays": 90
   },
   "message": "SSL certificate requested successfully"
 }
@@ -300,26 +378,49 @@ Request SSL certificate for a domain.
 ### Pages Management
 
 #### GET /api/pages
-Get all Pages projects.
+Get all Pages projects with pagination support.
+
+**Query Parameters:**
+- `page` (optional): Page number (default: 1)
+- `per_page` (optional): Items per page (default: 10, max: 100)
 
 **Response:**
 ```json
 {
   "success": true,
-  "data": [
-    {
-      "id": "project123",
-      "name": "my-website",
-      "status": "deployed",
-      "url": "https://my-website.pages.dev",
-      "domains": ["my-website.com"],
-      "deploymentId": "deploy123",
-      "createdAt": "2024-01-01T00:00:00.000Z",
-      "lastDeployedAt": "2024-01-01T00:00:00.000Z"
+  "data": {
+    "data": [
+      {
+        "id": "project123",
+        "name": "my-website",
+        "status": "deployed",
+        "url": "https://my-website.pages.dev",
+        "domains": ["my-website.com"],
+        "deploymentId": "deploy123",
+        "createdAt": "2024-01-01T00:00:00.000Z",
+        "lastDeployedAt": "2024-01-01T00:00:00.000Z"
+      }
+    ],
+    "pagination": {
+      "current_page": 1,
+      "per_page": 10,
+      "total": 15,
+      "total_pages": 2,
+      "has_next_page": true,
+      "has_prev_page": false
     }
-  ],
+  },
   "message": "Pages projects retrieved successfully"
 }
+```
+
+**Example Requests:**
+```bash
+# Get first page with default page size
+GET /api/pages
+
+# Get second page with 20 items per page
+GET /api/pages?page=2&per_page=20
 ```
 
 #### POST /api/pages
@@ -602,6 +703,29 @@ const createResponse = await fetch('https://api.luckyjingwen.top/api/domains', {
 });
 
 const createData = await createResponse.json();
+
+// Get SSL certificates for a domain
+const sslResponse = await fetch('https://api.luckyjingwen.top/api/domains/zone123/ssl-certificates');
+const sslData = await sslResponse.json();
+
+if (sslData.success) {
+  console.log('SSL Certificates:', sslData.data);
+  sslData.data.forEach(cert => {
+    console.log(`Certificate ${cert.id}: ${cert.status} (${cert.issuer})`);
+  });
+} else {
+  console.error('Error:', sslData.message);
+}
+
+// Request a new SSL certificate
+const requestSslResponse = await fetch('https://api.luckyjingwen.top/api/domains/zone123/ssl-certificate', {
+  method: 'POST',
+  headers: {
+    'Content-Type': 'application/json',
+  }
+});
+
+const requestSslData = await requestSslResponse.json();
 ```
 
 ### cURL
@@ -615,6 +739,13 @@ curl -X POST https://api.luckyjingwen.top/api/domains \
   -H "Content-Type: application/json" \
   -d '{"name": "example.com", "nameservers": ["ns1.example.com", "ns2.example.com"]}'
 
+# Get SSL certificates for a domain
+curl -X GET https://api.luckyjingwen.top/api/domains/zone123/ssl-certificates
+
+# Request a new SSL certificate
+curl -X POST https://api.luckyjingwen.top/api/domains/zone123/ssl-certificate \
+  -H "Content-Type: application/json"
+
 # Deploy a Pages project
 curl -X POST https://api.luckyjingwen.top/api/pages/my-website/deploy \
   -H "Content-Type: application/json" \
@@ -622,6 +753,18 @@ curl -X POST https://api.luckyjingwen.top/api/pages/my-website/deploy \
 ```
 
 ## Changelog
+
+### v1.2.0
+- **NEW**: Added pagination support to `GET /api/domains` endpoint
+- **NEW**: Added pagination support to `GET /api/pages` endpoint
+- **NEW**: Added pagination query parameters (`page`, `per_page`) with validation
+- **ENHANCED**: Updated response format to include pagination metadata
+- **IMPROVED**: Enhanced API performance with configurable page sizes (max 100 items per page)
+
+### v1.1.0
+- **NEW**: Added `GET /api/domains/{domainId}/ssl-certificates` endpoint to retrieve all SSL certificates for a domain
+- **ENHANCED**: Updated SSL certificate data structure to include more detailed information (hosts, type, validationMethod, validityDays)
+- **IMPROVED**: Enhanced SSL certificate status handling with support for `backup_issued` status
 
 ### v1.0.0
 - Initial API release

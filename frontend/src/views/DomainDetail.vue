@@ -139,8 +139,8 @@
       </Card>
 
       <!-- SSL Certificate Management - Moved to bottom -->
-      <SSLCertificateManager :domain-id="props.domainId" :certificate="domainDetail.sslCertificate"
-        @certificate-updated="handleSSLCertificateUpdated" />
+      <SSLCertificateManager :domain-id="props.domainId"
+        @certificates-updated="handleSSLCertificatesUpdated" />
     </div>
 
     <!-- DNS Record Modal -->
@@ -540,10 +540,12 @@ const cancelDeleteRecord = () => {
   deleteRecordError.value = null
 }
 
-// SSL certificate update handler
-const handleSSLCertificateUpdated = (certificate: SSLCertificate | null) => {
+// SSL certificates update handler
+const handleSSLCertificatesUpdated = (certificates: SSLCertificate[]) => {
   if (domainDetail.value) {
-    domainDetail.value.sslCertificate = certificate || undefined
+    // Update the domain detail with the first active certificate for backward compatibility
+    const activeCertificate = certificates.find(cert => cert.status === 'active') || certificates[0]
+    domainDetail.value.sslCertificate = activeCertificate || undefined
   }
 }
 

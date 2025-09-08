@@ -61,12 +61,20 @@ export interface TableProps<T = any> {
 
 // Pagination props
 export interface PaginationProps {
+  /** 当前页码 */
   currentPage: number;
-  totalPages: number;
+  /** 每页显示数量 */
   pageSize: number;
-  totalItems: number;
-  onPageChange: (page: number) => void;
-  onPageSizeChange?: (size: number) => void;
+  /** 总记录数 */
+  total: number;
+  /** 显示的页码按钮数量 */
+  showPages?: number;
+}
+
+// Pagination events
+export interface PaginationEvents {
+  /** 页码变化事件 */
+  pageChange: (page: number) => void;
 }
 
 // Status badge props

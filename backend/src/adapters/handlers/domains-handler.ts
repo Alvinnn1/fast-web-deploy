@@ -6,6 +6,7 @@ import { WorkersCloudflareClient } from '../workers-cloudflare-client.js'
 import { WorkersResponseFormatter } from '../workers-response-formatter.js'
 import { WorkersErrorHandler } from '../workers-error-handler.js'
 import { CreateDomainRequest, UpdateDNSRecordRequest, CreateDNSRecordRequest, Domain, DomainDetail, DNSRecord, SSLCertificate } from '../../types.js'
+import { PaginationHelper } from '../../utils/pagination.js'
 
 // Transform Cloudflare zone to our Domain interface
 function transformZoneToDomain(zone: any): Domain {
@@ -33,11 +34,17 @@ function transformDNSRecord(record: any): DNSRecord {
 
 // Transform Cloudflare SSL certificate to our SSLCertificate interface
 function transformSSLCertificate(cert: any): SSLCertificate {
+  console.log('Transforming certificate:', cert)
+
   return {
     id: cert.id,
     status: cert.status,
-    issuer: cert.issuer || 'Cloudflare',
-    expiresAt: cert.expires_on
+    issuer: cert.certificate_authority || cert.issuer || 'Cloudflare',
+    expiresAt: cert.expires_on || cert.expiresAt || new Date(Date.now() + 90 * 24 * 60 * 60 * 1000).toISOString(),
+    hosts: cert.hosts || [],
+    type: cert.type,
+    validationMethod: cert.validation_method,
+    validityDays: cert.validity_days
   }
 }
 
@@ -51,7 +58,7 @@ export class DomainsHandler {
 
       // GET /api/domains - Get all domains
       if (pathParts.length === 2 && pathParts[1] === 'domains' && method === 'GET') {
-        return this.getAllDomains()
+        return this.getAllDomains(request)
       }
 
       // POST /api/domains - Create new domain
@@ -91,6 +98,12 @@ export class DomainsHandler {
         return this.deleteDNSRecord(domainId, recordId)
       }
 
+      // GET /api/domains/:id/ssl-certificates - Get SSL certificates list
+      if (pathParts.length === 4 && pathParts[1] === 'domains' && pathParts[3] === 'ssl-certificates' && method === 'GET') {
+        const domainId = pathParts[2]!
+        return this.getSSLCertificates(domainId)
+      }
+
       // POST /api/domains/:id/ssl-certificate - Request SSL certificate
       if (pathParts.length === 4 && pathParts[1] === 'domains' && pathParts[3] === 'ssl-certificate' && method === 'POST') {
         const domainId = pathParts[2]!
@@ -103,12 +116,24 @@ export class DomainsHandler {
     }
   }
 
-  private async getAllDomains(): Promise<Response> {
+  private async getAllDomains(request: Request): Promise<Response> {
+    const url = new URL(request.url)
+    const paginationParams = PaginationHelper.parseParams(url.searchParams)
+
+    // Validate pagination parameters
+    const validation = PaginationHelper.validateParams(paginationParams)
+    if (!validation.valid) {
+      return WorkersResponseFormatter.badRequest(validation.error!)
+    }
+
     const zones = await this.cloudflareClient.getZones()
     const domains = zones.map(transformZoneToDomain)
 
+    // Apply pagination
+    const paginatedResult = PaginationHelper.paginate(domains, paginationParams)
+
     return WorkersResponseFormatter.success(
-      domains,
+      paginatedResult,
       'Domains retrieved successfully'
     )
   }
@@ -307,6 +332,38 @@ export class DomainsHandler {
       { id: recordId },
       'DNS record deleted successfully'
     )
+  }
+
+  private async getSSLCertificates(domainId: string): Promise<Response> {
+    if (!domainId || typeof domainId !== 'string') {
+      throw WorkersErrorHandler.createValidationError('Domain ID is required')
+    }
+
+    try {
+      const certificatesResponse = await this.cloudflareClient.getSSLCertificate(domainId)
+
+      console.log('domainId', domainId)
+      console.log('certificatesResponse', certificatesResponse)
+
+      // The makeRequest method already extracts the 'result' from Cloudflare response
+      // So certificatesResponse should be the array of certificates directly
+      const certificates = Array.isArray(certificatesResponse) ? certificatesResponse : []
+
+      console.log('certificates to transform:', certificates)
+      const transformedCertificates = certificates.map(transformSSLCertificate)
+      console.log('transformedCertificates:', transformedCertificates)
+
+      return WorkersResponseFormatter.success(
+        transformedCertificates,
+        'SSL certificates retrieved successfully'
+      )
+    } catch (error) {
+      // If no certificates exist, return empty array instead of error
+      return WorkersResponseFormatter.success(
+        [],
+        'No SSL certificates found'
+      )
+    }
   }
 
   private async requestSSLCertificate(domainId: string): Promise<Response> {

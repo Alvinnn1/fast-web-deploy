@@ -42,8 +42,13 @@
     <!-- Pages List -->
     <div v-else class="space-y-4">
       <div class="flex justify-between items-center">
-        <p class="text-sm text-gray-600">共 {{ pages.length }} 个页面</p>
-        <Button @click="refresh" variant="ghost" size="sm" :disabled="loading">
+        <p class="text-sm text-gray-600">
+          共 {{ pagination.total }} 个页面
+          <span v-if="pagination.total > 0">
+            (第 {{ pagination.current_page }} 页，共 {{ pagination.total_pages }} 页)
+          </span>
+        </p>
+        <Button @click="fetchPages" variant="ghost" size="sm" :disabled="loading">
           <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
               d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
@@ -56,20 +61,30 @@
         <PageItem v-for="page in pages" :key="page.id" :page="page" @click="handlePageClick" @upload="handlePageUpload"
           @view-status="handleViewStatus" />
       </div>
+
+      <!-- Pagination -->
+      <div v-if="pagination.total > 0" class="mt-6">
+        <Pagination
+          :current-page="pagination.current_page"
+          :page-size="pagination.per_page"
+          :total="pagination.total"
+          @page-change="handlePageChange"
+        />
+      </div>
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
 import { onMounted, onActivated } from 'vue'
-import { Button, LoadingSpinner, Alert } from '@/components/ui'
+import { Button, LoadingSpinner, Alert, Pagination } from '@/components/ui'
 import PageItem from '@/components/PageItem.vue'
-import { usePages } from '@/composables/useDataCache'
+import { usePagesPagination } from '@/composables/usePagination'
 import { useTabState } from '@/composables/useTabState'
 import type { Page, DeploymentStatusDetail } from '@/types'
 
-// Use cached data management
-const { pages, loading, error, loadPages, refreshPages, addPage: addPageToCache, updatePage } = usePages()
+// Use paginated data management
+const { data: pages, loading, error, pagination, fetchData, goToPage, refresh } = usePagesPagination()
 const { markTabInitialized, isTabInitialized } = useTabState()
 
 // Emits for parent component communication
@@ -100,6 +115,11 @@ const handleViewStatus = (page: Page) => {
   emit('viewStatus', page)
 }
 
+// Handle pagination events
+const handlePageChange = (page: number) => {
+  goToPage(page)
+}
+
 // Handle status updates from UploadModal
 const handleStatusUpdate = (update: { pageId: string; status: any }) => {
   const { pageId, status } = update
@@ -120,7 +140,8 @@ const handleStatusUpdate = (update: { pageId: string; status: any }) => {
     pageUpdates.deploymentId = status.deploymentId
   }
 
-  updatePage(pageId, pageUpdates)
+  // Note: With pagination, we need to refresh the current page to see updates
+  refresh()
 }
 
 // Map deployment status to page status
@@ -142,21 +163,26 @@ const mapDeploymentStatusToPageStatus = (deploymentStatus: string): Page['status
 // Refresh specific page data from API
 const refreshPageData = async (pageId: string) => {
   try {
-    // Force refresh all pages to get latest data
-    await refreshPages()
+    // Force refresh current page to get latest data
+    await refresh()
   } catch (error) {
     console.error('Failed to refresh page data:', error)
   }
 }
 
 // Refresh pages (exposed method) - force refresh
-const refresh = () => {
-  return refreshPages()
+const refreshPages = () => {
+  return refresh()
+}
+
+// Fetch pages (alias for compatibility)
+const fetchPages = () => {
+  return fetchData()
 }
 
 // Load pages without forcing refresh (uses cache if available)
 const loadPagesFromCache = async () => {
-  await loadPages(false)
+  await fetchData()
   markTabInitialized('pages')
 }
 
@@ -178,10 +204,8 @@ onActivated(() => {
 
 // Expose methods for parent component
 defineExpose({
-  refresh,
-  loadPages: loadPagesFromCache,
-  addPage: addPageToCache,
-  updatePage,
+  refresh: refreshPages,
+  fetchData,
   handleStatusUpdate,
   refreshPageData
 })

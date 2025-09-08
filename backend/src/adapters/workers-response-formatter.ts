@@ -45,6 +45,13 @@ export class WorkersResponseFormatter {
   }
 
   /**
+   * Create a bad request response (400)
+   */
+  static badRequest(message: string, details?: any): Response {
+    return this.error(message, 'VALIDATION_ERROR', 400, details)
+  }
+
+  /**
    * Create a paginated response
    */
   static paginated<T>(
