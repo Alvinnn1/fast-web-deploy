@@ -12,7 +12,7 @@
             </div>
             <h1
               class="text-xl font-semibold bg-gradient-to-r from-purple-600 to-purple-800 bg-clip-text text-transparent">
-              Cloudflare Static Deployer
+              Fast Web Deployer
             </h1>
           </div>
         </div>
