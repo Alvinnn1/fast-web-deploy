@@ -154,6 +154,12 @@ export class PagesHandler {
         return this.createPage(request)
       }
 
+      // GET /api/pages/:projectName - Get specific page project
+      if (pathParts.length === 3 && pathParts[1] === 'pages' && method === 'GET') {
+        const projectName = pathParts[2]!
+        return this.getPage(projectName)
+      }
+
       // POST /api/pages/:projectName/deploy - Deploy page
       if (pathParts.length === 4 && pathParts[1] === 'pages' && pathParts[3] === 'deploy' && method === 'POST') {
         const projectName = pathParts[2]!
@@ -285,6 +291,31 @@ export class PagesHandler {
       page,
       'Page project created successfully'
     )
+  }
+
+  private async getPage(projectName: string): Promise<Response> {
+    if (!projectName || typeof projectName !== 'string') {
+      throw WorkersErrorHandler.createValidationError('Page project name is required')
+    }
+
+    // Use configured account ID
+    const accountId = this.cloudflareClient.getConfiguredAccountId()
+
+    // Get the specific project
+    try {
+      const project = await this.cloudflareClient.getPagesProject(accountId, projectName)
+      const page = transformPagesProjectToPage(project)
+
+      return WorkersResponseFormatter.success(
+        page,
+        'Page project retrieved successfully'
+      )
+    } catch (error: any) {
+      if (error.statusCode === 404) {
+        throw WorkersErrorHandler.createValidationError('Page project not found')
+      }
+      throw error
+    }
   }
 
   private async deployPage(request: Request, projectName: string): Promise<Response> {

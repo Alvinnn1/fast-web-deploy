@@ -28,35 +28,30 @@ export class ApiClient {
   // 检查项目是否存在
   async checkProject(projectName: string): Promise<Page | null> {
     try {
-      const response = await this.client.get<ApiResponse<Page[]>>(`/api/pages`);
-      const pages = response.data.data || [];
+      console.log(`🔍 Checking if project '${projectName}' exists in the system...`);
+      const response = await this.client.get<ApiResponse<Page>>(`/api/pages/${projectName}`);
 
-      // 检查响应是否成功
-      if (!pages || !pages.length) {
-        return null;
-      }
-
-      // 在pages数组中查找匹配的项目
-      const existingProject = pages.find((page: Page) =>
-        page.name === projectName || page.id === projectName
-      );
-
-      if (existingProject) {
+      const project = response.data.data;
+      if (project) {
+        console.log(`✅ Project found: ID=${project.id}, Name=${project.name}`);
         return {
-          id: existingProject.id,
-          name: existingProject.name,
-          project_name: existingProject.project_name,
-          createdAt: existingProject.createdAt,
-          status: existingProject.status || 'active',
-          url: existingProject.url
+          id: project.id,
+          name: project.name,
+          project_name: project.project_name,
+          createdAt: project.createdAt,
+          status: project.status || 'active',
+          url: project.url
         };
       } else {
+        console.log(`❌ Project '${projectName}' not found`);
         return null;
       }
     } catch (error: any) {
       if (error.response?.status === 404) {
-        return null
+        console.log(`📭 Project '${projectName}' not found (404)`);
+        return null;
       }
+      console.error(`🚨 Error checking project: ${error.message}`);
       throw new Error(`Failed to check project: ${error.message}`);
     }
   }
